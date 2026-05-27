@@ -51,10 +51,21 @@ def apply_model_params_to_body(params: dict, body: dict) -> dict:
     return body
 
 
+# Thinking-related params that must NEVER be stripped — always pass through to vLLM
+_THINKING_PASSTHROUGH_KEYS = frozenset({
+    "chat_template_kwargs",
+    "enable_thinking",
+    "preserve_thinking",
+    "thinking",          # Anthropic-style {"type":"enabled","budget_tokens":...}
+})
+
+
 def strip_unsupported_params(body: dict, model_capabilities: dict) -> dict:
     """
     Remove parameters not supported by specific model.
-    Example: 'tools' for models that don't support function calling.
+
+    Thinking params (chat_template_kwargs, enable_thinking, preserve_thinking)
+    are ALWAYS passed through to the provider unchanged — vLLM / Qwen3 needs them.
     """
     if not model_capabilities.get("tools", False):
         body.pop("tools", None)
@@ -70,6 +81,44 @@ def strip_unsupported_params(body: dict, model_capabilities: dict) -> dict:
                     if p.get("type") == "text"
                 ]
                 msg["content"] = " ".join(text_parts)
+
+    # Thinking params — never strip, always forward to provider
+    # These are set by the Android client toggle and consumed by vLLM chat template
+    # enable_thinking=False  → disables <think> blocks in Qwen3
+    # preserve_thinking=True → keeps <think> blocks in output (for display)
+    # chat_template_kwargs   → vLLM-specific, passed directly to Jinja template
+    # (no action needed — they're already in body via extra_params pass-through)
+
+    return body
+
+
+def apply_thinking_params(body: dict, enable_thinking: bool | None, preserve_thinking: bool | None = None) -> dict:
+    """
+    Apply thinking toggle params to the request body.
+
+    Called when the Android client sends explicit thinking control flags
+    (separate from the main body, e.g. as top-level request fields).
+
+    vLLM Qwen3 usage:
+      - enable_thinking=False  → chat_template_kwargs={"enable_thinking": False}
+      - preserve_thinking=True → chat_template_kwargs={"preserve_thinking": True}
+
+    These can be combined: disable thinking output but preserve existing think blocks.
+    """
+    if enable_thinking is None and preserve_thinking is None:
+        return body
+
+    # Build or merge chat_template_kwargs
+    ctk: dict = body.get("chat_template_kwargs") or {}
+
+    if enable_thinking is not None:
+        ctk["enable_thinking"] = enable_thinking
+
+    if preserve_thinking is not None:
+        ctk["preserve_thinking"] = preserve_thinking
+
+    if ctk:
+        body["chat_template_kwargs"] = ctk
 
     return body
 

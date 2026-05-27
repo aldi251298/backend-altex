@@ -59,9 +59,15 @@ async def generate_chat_completion(
     chat_id: str = form_data.get("chat_id") or str(uuid_module.uuid4())
     message_id: str = str(uuid_module.uuid4())
 
+    # Extract thinking toggle flags (sent by Android client separately or as top-level fields)
+    # These are forwarded to vLLM via chat_template_kwargs
+    enable_thinking: bool | None = form_data.get("enable_thinking")   # None = not set (use model default)
+    preserve_thinking: bool | None = form_data.get("preserve_thinking")
+
     extra_params = {
         k: v for k, v in form_data.items()
-        if k not in ("model", "messages", "stream", "files", "web_search", "chat_id")
+        if k not in ("model", "messages", "stream", "files", "web_search", "chat_id",
+                     "enable_thinking", "preserve_thinking")
     }
 
     if not messages:
@@ -87,9 +93,14 @@ async def generate_chat_completion(
     body.update(extra_params)
 
     # ── 3. Apply system prompt + model params ────────────────────────────────
-    from utils.payload import apply_system_prompt_to_body, apply_model_params_to_body, strip_unsupported_params
+    from utils.payload import apply_system_prompt_to_body, apply_model_params_to_body, strip_unsupported_params, apply_thinking_params
     body = apply_system_prompt_to_body(model.get("params", {}), body)
     body = apply_model_params_to_body(model.get("params", {}), body)
+
+    # ── 3b. Apply thinking toggle ────────────────────────────────────────────
+    # Handles: enable_thinking=False → chat_template_kwargs={"enable_thinking": False}
+    # Also handles chat_template_kwargs already in body (from extra_params pass-through)
+    body = apply_thinking_params(body, enable_thinking, preserve_thinking)
 
     # ── 4. Filter pipeline (inlet) ───────────────────────────────────────────
     from utils.filter import process_filter_functions
@@ -391,9 +402,12 @@ def _detect_capabilities(model_id: str) -> dict:
     mid = model_id.lower()
     vision = any(t in mid for t in ["vision", "vl", "gpt-4o", "claude-3", "gemini", "llava", "pixtral", "qwen-vl", "internvl"])
     tools = any(t in mid for t in ["gpt-4", "gpt-3.5", "claude", "qwen", "mistral", "llama-3", "gemini", "deepseek"])
+    # Thinking / extended reasoning — Qwen3, QwQ, DeepSeek-R1, o1/o3, Claude 3.5+
+    thinking = any(t in mid for t in ["qwen3", "qwq", "deepseek-r1", "r1", "o1", "o3", "claude-3-5", "claude-3-7"])
     return {
         "vision": vision,
         "tools": tools,
+        "thinking": thinking,
         "streaming": True,
     }
 
