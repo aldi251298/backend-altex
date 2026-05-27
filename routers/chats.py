@@ -3,19 +3,16 @@ Chat history router.
 CRUD operations for chat history.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 
 from database import async_session_factory
 from models.chats import Chat
-from utils.auth import get_verified_user
 
 router = APIRouter()
 
-
-# ============================================================================
-# Endpoints
-# ============================================================================
+# Anonymous user ID (no auth required)
+ANONYMOUS_USER_ID = "anonymous"
 
 
 @router.get("", summary="List chat (paginated, metadata only)")
@@ -24,14 +21,10 @@ async def list_chats(
     limit: int = Query(60, ge=1, le=100),
     archived: bool = Query(False),
     pinned_only: bool = Query(False),
-    user=Depends(get_verified_user),
 ):
-    """
-    List chat dengan pagination.
-    HANYA return metadata (BUKAN full JSONB) untuk performa.
-    """
+    """List chat dengan pagination. No auth required."""
     result = await Chat.get_list(
-        user_id=user["id"],
+        user_id=ANONYMOUS_USER_ID,
         page=page,
         limit=limit,
         archived=archived,
@@ -43,14 +36,13 @@ async def list_chats(
 @router.post("", summary="Buat chat baru", status_code=201)
 async def create_chat(
     body: dict,
-    user=Depends(get_verified_user),
 ):
-    """Buat chat baru."""
+    """Buat chat baru. No auth required."""
     title = body.get("title", "Chat Baru")
     model = body.get("model")
     
     chat = await Chat.create(
-        user_id=user["id"],
+        user_id=ANONYMOUS_USER_ID,
         title=title,
         model=model,
     )
@@ -61,13 +53,12 @@ async def create_chat(
 @router.get("/{chat_id}", summary="Get chat dengan full history")
 async def get_chat(
     chat_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Get chat dengan full conversation history."""
+    """Get chat dengan full conversation history. No auth required."""
     async with async_session_factory() as db:
         chat = await Chat.get_by_id(db, chat_id)
     
-    if not chat or chat.user_id != user["id"]:
+    if not chat:
         raise HTTPException(
             status_code=404,
             detail="Chat tidak ditemukan",
@@ -87,24 +78,22 @@ async def get_chat(
 async def update_chat(
     chat_id: str,
     body: dict,
-    user=Depends(get_verified_user),
 ):
-    """Update chat metadata."""
+    """Update chat metadata. No auth required."""
     async with async_session_factory() as db:
         chat = await Chat.get_by_id(db, chat_id)
         
-        if not chat or chat.user_id != user["id"]:
+        if not chat:
             raise HTTPException(
                 status_code=404,
                 detail="Chat tidak ditemukan",
             )
         
-        # Update allowed fields
         if "title" in body:
             await Chat.update_title(db, chat_id, body["title"])
         
         if "is_pinned" in body:
-            chat = await Chat.toggle_pin(db, chat_id, user["id"])
+            chat = await Chat.toggle_pin(db, chat_id, ANONYMOUS_USER_ID)
             if not chat:
                 raise HTTPException(
                     status_code=404,
@@ -127,11 +116,10 @@ async def update_chat(
 @router.delete("/{chat_id}", summary="Hapus chat")
 async def delete_chat(
     chat_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Hapus chat."""
+    """Hapus chat. No auth required."""
     async with async_session_factory() as db:
-        success = await Chat.delete(db, chat_id, user["id"])
+        success = await Chat.delete(db, chat_id, ANONYMOUS_USER_ID)
     
     if not success:
         raise HTTPException(
@@ -144,22 +132,20 @@ async def delete_chat(
 
 @router.delete("", summary="Hapus semua chat user")
 async def delete_all_chats(
-    user=Depends(get_verified_user),
 ):
-    """Hapus semua chat milik user."""
+    """Hapus semua chat. No auth required."""
     async with async_session_factory() as db:
-        count = await Chat.delete_all(db, user["id"])
+        count = await Chat.delete_all(db, ANONYMOUS_USER_ID)
     return {"message": f"Dihapus {count} chat"}
 
 
 @router.get("/{chat_id}/messages", summary="Get messages dari chat")
 async def get_messages(
     chat_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Get semua messages dari chat."""
+    """Get semua messages dari chat. No auth required."""
     async with async_session_factory() as db:
-        messages = await Chat.get_messages(db, chat_id, user["id"])
+        messages = await Chat.get_messages(db, chat_id, ANONYMOUS_USER_ID)
     
     if not messages:
         raise HTTPException(
@@ -175,9 +161,8 @@ async def upsert_message(
     chat_id: str,
     message_id: str,
     message_data: dict,
-    user=Depends(get_verified_user),
 ):
-    """Tambah atau update message dalam chat."""
+    """Tambah atau update message dalam chat. No auth required."""
     async with async_session_factory() as db:
         success = await Chat.upsert_message(db, chat_id, message_id, message_data)
     
@@ -193,11 +178,10 @@ async def upsert_message(
 @router.post("/{chat_id}/archive", summary="Archive chat")
 async def archive_chat(
     chat_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Archive chat."""
+    """Archive chat. No auth required."""
     async with async_session_factory() as db:
-        success = await Chat.archive(db, chat_id, user["id"])
+        success = await Chat.archive(db, chat_id, ANONYMOUS_USER_ID)
     
     if not success:
         raise HTTPException(
@@ -211,11 +195,10 @@ async def archive_chat(
 @router.post("/{chat_id}/pin", summary="Pin/unpin chat")
 async def toggle_pin(
     chat_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Toggle pin status chat."""
+    """Toggle pin status chat. No auth required."""
     async with async_session_factory() as db:
-        chat = await Chat.toggle_pin(db, chat_id, user["id"])
+        chat = await Chat.toggle_pin(db, chat_id, ANONYMOUS_USER_ID)
     
     if not chat:
         raise HTTPException(

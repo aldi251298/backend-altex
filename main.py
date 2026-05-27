@@ -123,10 +123,7 @@ async def health_check():
 def mount_routers():
     """Mount all router modules to the FastAPI app."""
     # Import routers here to avoid circular imports
-    from routers import auth, chat, chats, models, providers, files, retrieval, tasks
-
-    # Authentication
-    app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+    from routers import chat, chats, models, providers, files, retrieval, tasks
 
     # Provider Management
     app.include_router(

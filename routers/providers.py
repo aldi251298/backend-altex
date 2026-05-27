@@ -3,22 +3,19 @@ Provider management router.
 CRUD operations dan test connection untuk AI providers.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 
 import httpx
 
 from database import async_session_factory
 from models.providers import Provider
-from utils.auth import get_verified_user
 from constants import time_ns
 
 router = APIRouter()
 
-
-# ============================================================================
-# Endpoints
-# ============================================================================
+# Anonymous user ID (no auth required)
+ANONYMOUS_USER_ID = "anonymous"
 
 
 @router.get("", summary="List semua provider")
@@ -32,12 +29,8 @@ async def list_providers():
 @router.post("", summary="Tambah provider baru", status_code=201)
 async def create_provider(
     body: dict,
-    user=Depends(get_verified_user),
 ):
-    """Tambah provider baru."""
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Hanya admin yang bisa tambah provider")
-    
+    """Tambah provider baru. No auth required."""
     name = body.get("name")
     base_url = body.get("base_url")
     
@@ -77,12 +70,8 @@ async def get_provider(
 async def update_provider(
     provider_id: str,
     body: dict,
-    user=Depends(get_verified_user),
 ):
-    """Update provider."""
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Hanya admin yang bisa update provider")
-    
+    """Update provider. No auth required."""
     async with async_session_factory() as db:
         provider = await Provider.get_by_id(db, provider_id)
         if not provider:
@@ -100,12 +89,8 @@ async def update_provider(
 @router.delete("/{provider_id}", summary="Hapus provider")
 async def delete_provider(
     provider_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Hapus provider."""
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Hanya admin yang bisa hapus provider")
-    
+    """Hapus provider. No auth required."""
     async with async_session_factory() as db:
         success = await Provider.delete(db, provider_id)
     

@@ -1,21 +1,22 @@
 """
 Chat completion router.
 Entry point utama untuk chat dengan SSE streaming.
-Mengikuti SRS Section 5: SSE Streaming Implementation.
 """
 
 import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from utils.auth import get_verified_user
 from utils.chat import generate_chat_completion
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Anonymous user ID (no auth required)
+ANONYMOUS_USER_ID = "anonymous"
 
 
 @router.post(
@@ -25,25 +26,13 @@ logger = logging.getLogger(__name__)
 async def chat_completions(
     request: Request,
     body: dict,
-    user=Depends(get_verified_user),
 ):
     """
     Entry point utama chat completion.
-    Semua request chat harus melalui endpoint ini karena melewati pipeline lengkap.
-    
-    - Validasi JWT
-    - System prompt injection
-    - Filter pipeline
-    - RAG retrieval
-    - Web search
-    - Tool specs injection
-    - SSE streaming ke provider
-    - Headers: Cache-Control: no-cache, Connection: keep-alive, X-Accel-Buffering: no
+    No authentication required.
     """
-    # Validate required fields
     messages = body.get("messages")
     if not messages:
-        # Return error as SSE format
         error_chunk = {"error": {"code": 422, "message": "Field 'messages' wajib diisi", "type": "validation_error"}}
         error_sse = f"data: {json.dumps(error_chunk)}\n\n"
         
@@ -53,12 +42,13 @@ async def chat_completions(
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
-                "X-Accel-Buffering": "no",  # KRITIS: disable Nginx buffering per SRS
+                "X-Accel-Buffering": "no",
                 "Access-Control-Allow-Origin": "*",
             },
         )
 
-    # Log request
+    user = {"id": ANONYMOUS_USER_ID}
+    
     logger.info(
         "chat_completion_request",
         user_id=user["id"],
@@ -68,10 +58,10 @@ async def chat_completions(
         web_search=body.get("web_search", False),
     )
 
-    # Generate SSE stream - use async generator wrapper
     async def stream_generator():
         try:
-            async for chunk in generate_chat_completion(request, body, user, background_tasks):
+            # Note: background_tasks needs to be passed if used in generate_chat_completion
+            async for chunk in generate_chat_completion(request, body, user, background_tasks=None):
                 yield chunk
         except Exception as e:
             logger.error(f"Chat completion error: {e}")
@@ -85,7 +75,7 @@ async def chat_completions(
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # KRITIS: disable Nginx buffering per SRS Section 5.1
+            "X-Accel-Buffering": "no",
             "Access-Control-Allow-Origin": "*",
         },
     )

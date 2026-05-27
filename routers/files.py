@@ -6,11 +6,12 @@ Upload, list, dan delete files untuk RAG.
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from constants import ALLOWED_FILE_TYPES, MAX_FILE_SIZE
 from database import async_session_factory
-from utils.auth import get_verified_user
 from models.files import File as FileModel
 
 router = APIRouter()
 
+# Anonymous user ID (no auth required)
+ANONYMOUS_USER_ID = "anonymous"
 
 ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".json", ".csv"}
 
@@ -18,26 +19,14 @@ ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".json", ".csv"}
 @router.post("/upload", summary="Upload file (multipart/form-data)", status_code=201)
 async def upload_file(
     file: UploadFile = File(...),
-    user=Depends(get_verified_user),
 ):
-    """
-    Pipeline upload file:
-    1. Validasi tipe & ukuran
-    2. Simpan ke storage
-    3. Extract teks
-    4. Chunking
-    5. Generate embeddings
-    6. Simpan ke pgvector
-    7. Return file metadata
-    """
-    # Validate file type
+    """Upload file untuk RAG. No auth required."""
     if file.content_type not in ALLOWED_FILE_TYPES:
         raise HTTPException(
             status_code=415,
             detail=f"Tipe file tidak didukung: {file.content_type}",
         )
     
-    # Check extension
     ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
     if f".{ext}" not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -45,45 +34,38 @@ async def upload_file(
             detail=f"Ekstensi file tidak didukung: .{ext}",
         )
     
-    # Read content
     content = await file.read()
     
-    # Validate size
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=413,
             detail="File terlalu besar (max 50MB)",
         )
     
-    # TODO: Full RAG pipeline would go here
-    # For now, return placeholder
     import uuid
     import os
     from datetime import datetime, timezone
+    from env import settings
     
     file_id = str(uuid.uuid4())
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     
-    # Create upload directory if it doesn't exist
-    from env import settings
     os.makedirs(settings.upload_dir, exist_ok=True)
     
-    # Save file to disk
     file_ext = os.path.splitext(file.filename)[1]
     storage_path = os.path.join(settings.upload_dir, f"{file_id}{file_ext}")
     with open(storage_path, "wb") as f:
         f.write(content)
     
-    # Create file record in DB
     collection_name = f"col_{file_id.replace('-', '')}"
     await FileModel.create(
         file_id=file_id,
-        user_id=user["id"],
+        user_id=ANONYMOUS_USER_ID,
         filename=file.filename,
         content_type=file.content_type,
         file_path=storage_path,
         collection_name=collection_name,
-        chunk_count=0,  # Would be calculated in full RAG pipeline
+        chunk_count=0,
         size_bytes=len(content),
     )
     
@@ -97,27 +79,25 @@ async def upload_file(
     }
 
 
-@router.get("", summary="List file milik user")
+@router.get("", summary="List file")
 async def list_files(
     page: int = 1,
-    user=Depends(get_verified_user),
 ):
-    """List file milik user dengan pagination."""
+    """List files. No auth required."""
     async with async_session_factory() as db:
-        result = await FileModel.get_by_user(db, user["id"], page=page)
+        result = await FileModel.get_by_user(db, ANONYMOUS_USER_ID, page=page)
     return result
 
 
 @router.get("/{file_id}", summary="Get file metadata")
 async def get_file(
     file_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Get metadata file."""
+    """Get file metadata. No auth required."""
     async with async_session_factory() as db:
         file_obj = await FileModel.get_by_id(db, file_id)
     
-    if not file_obj or file_obj.user_id != user["id"]:
+    if not file_obj:
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
     
     return file_obj.to_dict()
@@ -126,11 +106,10 @@ async def get_file(
 @router.delete("/{file_id}", summary="Hapus file + koleksi vector")
 async def delete_file(
     file_id: str,
-    user=Depends(get_verified_user),
 ):
-    """Hapus file dan koleksi vector terkait."""
+    """Hapus file. No auth required."""
     async with async_session_factory() as db:
-        success = await FileModel.delete(db, file_id, user["id"])
+        success = await FileModel.delete(db, file_id, ANONYMOUS_USER_ID)
     
     if not success:
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
