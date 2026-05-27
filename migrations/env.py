@@ -1,5 +1,6 @@
 """Alembic configuration for async migrations."""
 
+import asyncio
 import os
 import sys
 from pathlib import Path
@@ -11,7 +12,6 @@ from alembic import context
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from env import settings  # noqa: E402
-from database import Base, engine  # noqa: E402
 
 # Alembic Configuration
 config = context.config
@@ -20,6 +20,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+from database import Base  # noqa: E402
 target_metadata = Base.metadata
 
 
@@ -37,9 +38,6 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-import asyncio
-
-
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     from sqlalchemy.ext.asyncio import async_engine_from_config
@@ -47,6 +45,8 @@ def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = settings.database_url
     
+    # asyncpg doesn't support sslmode in URL query params
+    # SSL is handled by the database URL itself
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",
@@ -57,7 +57,7 @@ def run_migrations_online() -> None:
         async with connectable.connect() as connection:
             await connection.run_sync(
                 lambda conn: context.configure(
-                    connection=conn,
+                    connection=conn, 
                     target_metadata=target_metadata,
                     render_as_batch=True,
                 )
