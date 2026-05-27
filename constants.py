@@ -162,8 +162,8 @@ DEFAULT_TITLE_MAX_CHARS = 100
 
 
 def time_ns() -> int:
-    """Return current Unix timestamp in nanoseconds."""
-    return int(time.time() * 1_000_000_000)
+    """Return current Unix timestamp in seconds (stored as int in DB INTEGER)."""
+    return int(time.time())
 
 
 def time_ms() -> int:
