@@ -206,6 +206,14 @@ def mount_routers():
         tags=["Audio"],
     )
 
+    # ── Image Generation (SSE pipeline: LLM enhance → image engine) ───────────
+    from routers import images as images_router
+    app.include_router(
+        images_router.router,
+        prefix="/api/images",
+        tags=["Image Generation"],
+    )
+
     log.info("routers_mounted")
 
 

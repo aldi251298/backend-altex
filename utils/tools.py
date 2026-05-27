@@ -13,6 +13,51 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 # ============================================================================
+# Tool-use system prompt — injected when tools are available
+# ============================================================================
+
+TOOL_USE_SYSTEM_PROMPT = """
+## Tool Use Instructions
+
+You have access to tools. Follow these rules strictly:
+
+### WHEN to use tools
+- `search_web`: Use IMMEDIATELY when the user asks about current events, news, prices, weather, sports scores, or any fact that may have changed after your training cutoff. Do NOT say "I don't have access to the internet" — use the tool instead.
+- `fetch_url`: Use when the user provides a URL and wants you to read/summarize its content.
+- `execute_code`: Use for any calculation, data processing, file parsing, or programming task where running code gives a more accurate result than guessing.
+- `calculate`: Use for any math expression. Never compute math in your head when this tool is available.
+- `get_current_time`: Use whenever the user asks about the current date or time.
+- `generate_image`: Use ONLY when the user explicitly requests image/picture/photo CREATION or GENERATION. See strict rules below.
+
+### generate_image — STRICT USAGE RULES
+ONLY call `generate_image` when the user's intent is unambiguously to CREATE/GENERATE a visual image right now.
+
+✅ CALL generate_image for:
+- "buatkan gambar kucing", "generate an image of...", "create a picture of..."
+- "tolong buat ilustrasi...", "gambarkan...", "draw me a..."
+- "bikin foto...", "generate art of..."
+
+❌ DO NOT call generate_image for:
+- "ide desain logo" (design idea/concept discussion)
+- "rencana desain aplikasi" (design plan)
+- "bagaimana cara membuat gambar yang bagus?" (how-to question)
+- "apa itu stable diffusion?" (informational question)
+- "saya mau buat gambar nanti" (future intent, not a request now)
+- "desain UI untuk aplikasi saya" (UI/UX design discussion)
+- "rancangan arsitektur" (architecture plan)
+- Any question about design, planning, or concepts — answer with text
+
+When in doubt, answer with text. Only generate an image when the user's primary intent is to receive a generated image as output.
+
+### General tool-use behavior
+- Prefer calling tools in parallel when multiple independent tools are needed.
+- Do NOT announce that you are going to use a tool — just use it.
+- Do NOT say "I cannot access the internet" or "I don't have real-time data" when search_web is available.
+- After receiving tool results, synthesize them into a clear, helpful response.
+"""
+
+
+# ============================================================================
 # Built-in Tool Specifications (OpenAI function-calling format)
 # ============================================================================
 
@@ -21,7 +66,12 @@ BUILTIN_TOOL_SPECS = {
         "type": "function",
         "function": {
             "name": "search_web",
-            "description": "Search the web for up-to-date information. Use when the user asks about recent events, facts, or anything that requires current data.",
+            "description": (
+                "Search the web for current, up-to-date information. "
+                "MUST use this tool when the user asks about: recent events, news, current prices, "
+                "weather, sports scores, stock prices, or any fact that may have changed after training. "
+                "Do NOT refuse to search — always use this tool for real-time queries."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -36,7 +86,10 @@ BUILTIN_TOOL_SPECS = {
         "type": "function",
         "function": {
             "name": "fetch_url",
-            "description": "Fetch and extract readable text content from a URL.",
+            "description": (
+                "Fetch and extract readable text content from a URL. "
+                "Use when the user provides a link and wants you to read, summarize, or analyze its content."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -50,7 +103,12 @@ BUILTIN_TOOL_SPECS = {
         "type": "function",
         "function": {
             "name": "execute_code",
-            "description": "Execute Python code and return the output. Use for calculations, data processing, or any computational task.",
+            "description": (
+                "Execute Python code and return the output. "
+                "Use for: calculations, data processing, string manipulation, file parsing, "
+                "sorting/filtering data, generating structured output, or any task where "
+                "running code gives a more reliable result than reasoning alone."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -65,12 +123,20 @@ BUILTIN_TOOL_SPECS = {
         "type": "function",
         "function": {
             "name": "generate_image",
-            "description": "Generate an image from a text description using an image generation model.",
+            "description": (
+                "Generate an actual image/picture using an AI image generation model. "
+                "ONLY use this tool when the user explicitly requests to CREATE or GENERATE a visual image right now. "
+                "Trigger phrases: 'buatkan gambar', 'generate image', 'create a picture', 'draw me', 'buat ilustrasi', 'gambarkan'. "
+                "DO NOT use for: design ideas, design plans, UI/UX discussions, architecture plans, "
+                "questions about design, 'rencana desain', 'ide rancangan', 'bagaimana cara membuat gambar', "
+                "or any conceptual/planning discussion. "
+                "When in doubt, respond with text instead of generating an image."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "prompt": {"type": "string", "description": "Detailed image description."},
-                    "size": {"type": "string", "description": "Image size: '1024x1024', '1792x1024', '1024x1792'.", "default": "1024x1024"},
+                    "prompt": {"type": "string", "description": "Detailed visual description of the image to generate."},
+                    "size": {"type": "string", "description": "Image size: '1024x1024' (square), '1792x1024' (landscape), '1024x1792' (portrait).", "default": "1024x1024"},
                     "quality": {"type": "string", "description": "Quality: 'standard' or 'hd'.", "default": "standard"},
                 },
                 "required": ["prompt"],
@@ -81,7 +147,7 @@ BUILTIN_TOOL_SPECS = {
         "type": "function",
         "function": {
             "name": "get_current_time",
-            "description": "Get the current date and time in UTC.",
+            "description": "Get the current date and time in UTC. Use whenever the user asks what time or date it is.",
             "parameters": {"type": "object", "properties": {}},
         },
     },
@@ -89,7 +155,11 @@ BUILTIN_TOOL_SPECS = {
         "type": "function",
         "function": {
             "name": "calculate",
-            "description": "Evaluate a mathematical expression and return the result.",
+            "description": (
+                "Evaluate a mathematical expression and return the exact result. "
+                "ALWAYS use this for any arithmetic, algebra, or math computation — "
+                "never compute math mentally when this tool is available."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -167,6 +237,32 @@ async def prepare_tools_for_request(
 
     if not body.get("tool_choice"):
         body["tool_choice"] = "auto"
+
+    # ── Inject TOOL_USE_SYSTEM_PROMPT ────────────────────────────────────────
+    # Append to existing system message, or insert a new system message at index 0.
+    # This ensures the model knows WHEN and HOW to use each tool.
+    messages: list[dict] = body.get("messages", [])
+    if messages:
+        # Find existing system message
+        sys_idx = next((i for i, m in enumerate(messages) if m.get("role") == "system"), None)
+        if sys_idx is not None:
+            existing_content = messages[sys_idx].get("content", "")
+            if isinstance(existing_content, str):
+                # Append tool instructions only if not already present
+                if "Tool Use Instructions" not in existing_content:
+                    messages[sys_idx]["content"] = existing_content + "\n\n" + TOOL_USE_SYSTEM_PROMPT
+            elif isinstance(existing_content, list):
+                # Multi-part content — append as text part
+                has_tool_instructions = any(
+                    "Tool Use Instructions" in (p.get("text", "") if isinstance(p, dict) else "")
+                    for p in existing_content
+                )
+                if not has_tool_instructions:
+                    existing_content.append({"type": "text", "text": TOOL_USE_SYSTEM_PROMPT})
+        else:
+            # No system message — prepend one
+            messages.insert(0, {"role": "system", "content": TOOL_USE_SYSTEM_PROMPT})
+        body["messages"] = messages
 
     return body
 

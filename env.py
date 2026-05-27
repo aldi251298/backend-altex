@@ -74,9 +74,18 @@ class Settings(BaseSettings):
     enable_tag_generation: bool = True
 
     # ── Features ────────────────────────────────────────────────────
-    enable_image_generation: bool = False
+    enable_image_generation: bool = True
     enable_code_interpreter: bool = False
     enable_memory: bool = False
+
+    # ── Image Generation ─────────────────────────────────────────────
+    image_default_model: str = ""
+    image_default_size: str = "1024x1024"
+    image_default_steps: Optional[int] = None   # None = let model decide
+    image_default_guidance: float = 7.5
+    image_max_timeout: int = 180
+    image_enhance_enabled: bool = True
+    image_enhance_max_tokens: int = 300
 
     # ── Redis (opsional, untuk caching & task queue) ─────────────────
     redis_url: str = "redis://localhost:6379/0"
