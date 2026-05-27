@@ -39,19 +39,62 @@ async def generate_chat_title(
         for m in context
     ])
 
-    prompt_template = settings.TITLE_GENERATION_PROMPT.value if settings else DEFAULT_TITLE_PROMPT
+    prompt_template = (
+        getattr(settings, "title_generation_prompt", None) or DEFAULT_TITLE_PROMPT
+    )
     prompt = prompt_template.format(messages=formatted)
 
     try:
         # Use lightweight task model if configured
-        task_model = settings.TASK_MODEL.value if settings and hasattr(settings, 'TASK_MODEL') else model_id
-        
-        # Call provider (placeholder)
-        # response = await call_provider(model=task_model, messages=[{"role": "user", "content": prompt}], max_tokens=50, stream=False)
-        # title = response.choices[0].message.content.strip()
-        
-        # Placeholder title
-        title = "Generated Title"
+        task_model = getattr(settings, "task_model", None) or model_id
+
+        # Call provider via aiohttp (non-streaming)
+        from database import async_session_factory
+        from sqlalchemy import text as sa_text
+
+        async with async_session_factory() as db:
+            row = await db.execute(
+                sa_text(
+                    "SELECT base_url, api_key FROM providers WHERE is_active = true LIMIT 1"
+                )
+            )
+            provider_row = row.fetchone()
+
+        if provider_row:
+            import aiohttp
+
+            provider_url = provider_row[0].rstrip("/")
+            api_key = provider_row[1] or ""
+            headers = {"Content-Type": "application/json"}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            payload = {
+                "model": task_model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 50,
+                "stream": False,
+            }
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{provider_url}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=15),
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        title = (
+                            data.get("choices", [{}])[0]
+                            .get("message", {})
+                            .get("content", "")
+                            .strip()
+                        ) or "Chat Baru"
+                    else:
+                        raise Exception(f"HTTP {resp.status}")
+        else:
+            # No provider configured — fall back to first user message
+            raise Exception("No active provider")
 
     except Exception as e:
         logger.warning(f"Title generation gagal: {e}")

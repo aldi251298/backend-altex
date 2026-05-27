@@ -3,7 +3,7 @@ Background tasks router.
 Manual endpoints untuk generate title dan tags.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from utils.task import generate_chat_title, generate_chat_tags
 from env import settings as app_settings
 

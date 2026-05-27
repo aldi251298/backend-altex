@@ -18,13 +18,14 @@ MODEL_CACHE_TIMESTAMPS: dict[str, float] = {}
 MODEL_CACHE_TTL = 300  # 5 minutes
 
 
-async def get_all_models(user: dict, providers: list, settings: Any = None) -> list[dict]:
+async def get_all_models(user: dict | None, providers: list, settings: Any = None) -> list[dict]:
     """
     Fetch and aggregate models from all configured providers.
     Uses cache TTL of 5 minutes to prevent hammering provider APIs.
     """
     now = time.time()
-    cache_key = f"user_{user.get('role', 'user')}"  # Cache per role
+    role = (user or {}).get("role", "user")
+    cache_key = f"user_{role}"  # Cache per role
 
     if (
         cache_key in MODEL_CACHE

@@ -3,11 +3,12 @@ Chat SQLAlchemy ORM model.
 Stores chat metadata and full conversation history as JSONB.
 """
 
+import json
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text, select, func
+from sqlalchemy import Boolean, Integer, String, Text, select, func
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, MappedAsDataclass
+from sqlalchemy.orm import Mapped, mapped_column
 
 from constants import DEFAULT_CHAT_TITLE, time_ns
 from database import Base, async_session_factory
@@ -19,9 +20,8 @@ class Chat(Base):
     __tablename__ = "chats"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
+    # No FK constraint — no auth, anonymous user only
+    user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     title: Mapped[str] = mapped_column(
         Text, default=DEFAULT_CHAT_TITLE
     )
@@ -165,14 +165,23 @@ class Chat(Base):
         message_data: dict,
     ) -> bool:
         """
-        Update a single message within chat JSONB.
-        Uses PostgreSQL jsonb_set for atomic update.
-        """
-        import json
+        Update a single message within chat JSONB using atomic jsonb_set.
 
+        asyncpg cannot determine the polymorphic type when binding parameters
+        to jsonb_set / to_jsonb() directly ($1 stays as "unknown" type).
+        Fix: embed the JSON as an inline SQL string literal with explicit
+        ::jsonb cast so PostgreSQL resolves the type at parse time.
+        Single-quotes inside JSON are escaped as ''.
+        """
         from sqlalchemy import text
 
-        msg_path = '{history,messages,' + message_id + '}'
+        # Serialize and escape single-quotes for safe SQL literal embedding
+        message_json_sql = json.dumps(message_data).replace("'", "''")
+        current_id_json_sql = json.dumps(message_id).replace("'", "''")
+
+        # Build path literals (message_id is a UUID – no special chars)
+        msg_path = "{" + f"history,messages,{message_id}" + "}"
+
         await db.execute(
             text(f"""
                 UPDATE chats
@@ -180,20 +189,18 @@ class Chat(Base):
                     chat = jsonb_set(
                         jsonb_set(
                             chat,
-            '{msg_path}',
-                            :message_data::jsonb,
+                            '{msg_path}',
+                            '{message_json_sql}'::jsonb,
                             true
                         ),
                         '{{history,currentId}}',
-                        :current_id::jsonb,
+                        '{current_id_json_sql}'::jsonb,
                         true
                     ),
                     updated_at = :updated_at
                 WHERE id = :chat_id
             """),
             {
-                "message_data": json.dumps(message_data),
-                "current_id": json.dumps(message_id),
                 "chat_id": chat_id,
                 "updated_at": time_ns(),
             }

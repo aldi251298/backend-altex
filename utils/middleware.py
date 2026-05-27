@@ -215,23 +215,22 @@ async def _vector_similarity_search(
 ) -> list[dict]:
     """
     Perform similarity search in pgvector using PgVectorAdapter.
-    
-    1. First, generate embedding for the query using the embedding service.
+
+    1. Generate embedding for the query using the embedding service.
     2. Query vector_store table using pgvector cosine similarity.
     3. Return matching chunks with text, metadata, and score.
     """
-    from constants import embedding_engine, rag_embedding_model, embedding_dimension
     from retrieval.vector.pgvector import pgvector_client
-    
+
     if pgvector_client is None:
         logger.warning("PgVectorAdapter not initialized, skipping vector search")
         return []
-    
+
     # Generate embedding for the query
     query_embedding = await _generate_embedding(query)
     if not query_embedding:
         return []
-    
+
     try:
         results = await pgvector_client.similarity_search(
             collection_name=collection_name,
