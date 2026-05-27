@@ -172,18 +172,19 @@ class Chat(Base):
 
         from sqlalchemy import text
 
+        msg_path = '{history,messages,' + message_id + '}'
         await db.execute(
-            text("""
+            text(f"""
                 UPDATE chats
                 SET
                     chat = jsonb_set(
                         jsonb_set(
                             chat,
-                            '{history,messages,:message_id}',
+            '{msg_path}',
                             :message_data::jsonb,
                             true
                         ),
-                        '{history,currentId}',
+                        '{{history,currentId}}',
                         :current_id::jsonb,
                         true
                     ),
@@ -191,7 +192,6 @@ class Chat(Base):
                 WHERE id = :chat_id
             """),
             {
-                "message_id": message_id,
                 "message_data": json.dumps(message_data),
                 "current_id": json.dumps(message_id),
                 "chat_id": chat_id,

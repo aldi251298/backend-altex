@@ -24,7 +24,7 @@ async def list_models(
     """
     async with async_session_factory() as db:
         providers = await Provider.get_active(db)
-    models = await get_all_models(None, providers)
+    models = await get_all_models({"id": ANONYMOUS_USER_ID, "role": "user"}, providers)
     
     return {"data": models}
 

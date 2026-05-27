@@ -201,7 +201,12 @@ async def generate_chat_completion(
                         choice = chunk.get("choices", [{}])[0]
                         delta = choice.get("delta", {})
 
-                        # Accumulate content for DB save
+                        # FILTER: Strip reasoning field to prevent leaking internal
+                        # thinking process to the client (Qwen3.x outputs delta.reasoning)
+                        if delta and "reasoning" in delta:
+                            del delta["reasoning"]
+
+                        # Accumulate content for DB save (from cleaned delta)
                         if delta.get("content"):
                             accumulated_content += delta["content"]
 
@@ -225,7 +230,7 @@ async def generate_chat_completion(
 
                         finish_reason = choice.get("finish_reason")
 
-                        # Forward chunk to client
+                        # Forward chunk to client (reasoning already stripped from delta)
                         yield format_sse_data(chunk)
 
                     except json.JSONDecodeError:
@@ -470,10 +475,12 @@ async def _get_provider_for_model(model: dict) -> dict:
                 "prefix": row[4] or "",
             }
     
-    # Ultimate fallback
+    # Ultimate fallback - use openai_base_url from env
+    from env import settings as app_settings
+    fallback_url = app_settings.openai_base_url or "http://172.31.2.240:8000/v1"
     return {
         "name": "default",
-        "base_url": "http://localhost:8000/v1",
+        "base_url": fallback_url,
         "api_key": "",
         "auth_type": "bearer",
         "prefix": "",
@@ -576,7 +583,12 @@ async def _save_completion_to_db(
 
         # Use PostgreSQL jsonb_set for atomic message update (SRS Section 11.1)
         # Build JSONB path dynamically with f-string (bind param not valid in path)
+        # NOTE: asyncpg doesn't support :param::jsonb syntax, so we use to_jsonb(text)
+        # which safely converts a bind parameter string to jsonb.
         message_path = f"{{history,messages,{message_id}}}"
+        message_json = json.dumps(message_data)
+        current_id_json = json.dumps(message_id)
+
         await db.execute(
             text(f"""
                 UPDATE chats
@@ -585,19 +597,19 @@ async def _save_completion_to_db(
                         jsonb_set(
                             chat,
                             '{message_path}',
-                            :message_data::jsonb,
+                            to_jsonb(:message_data),
                             true
                         ),
                         '{{history,currentId}}',
-                        :current_id::jsonb,
+                        to_jsonb(:current_id),
                         true
                     ),
                     updated_at = :updated_at
                 WHERE id = :chat_id
             """),
             {
-                "message_data": json.dumps(message_data),
-                "current_id": json.dumps(message_id),
+                "message_data": message_json,
+                "current_id": current_id_json,
                 "chat_id": chat_id,
                 "updated_at": time_ns(),
             }
