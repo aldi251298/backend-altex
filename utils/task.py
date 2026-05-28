@@ -84,12 +84,12 @@ async def generate_chat_title(
                 ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        title = (
+                        content = (
                             data.get("choices", [{}])[0]
                             .get("message", {})
-                            .get("content", "")
-                            .strip()
-                        ) or "Chat Baru"
+                            .get("content")
+                        )
+                        title = (content.strip() if content else None) or "Chat Baru"
                     else:
                         raise Exception(f"HTTP {resp.status}")
         else:
@@ -108,7 +108,7 @@ async def generate_chat_title(
             title += "..."
 
     # Sanitize: remove quotes, limit length
-    title = title.strip('"\'').strip()
+    title = str(title).strip('"\'').strip() if title else "Chat Baru"
     if len(title) > 100:
         title = title[:97] + "..."
 
