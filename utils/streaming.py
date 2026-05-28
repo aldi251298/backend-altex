@@ -13,6 +13,18 @@ from typing import Any, AsyncGenerator, Callable
 # ============================================================================
 
 
+def _parse_sse_event(data: str) -> str | None:
+    """
+    Parse a single SSE event from a string. Returns the JSON data part or None.
+    Handles: 'data: {json}\n\n' → '{json}'
+    """
+    if data.startswith("data: "):
+        return data[6:]
+    elif data.startswith("data:"):
+        return data[5:]
+    return None
+
+
 def format_sse_chunk(data: dict, event_type: str = "chat.completion.chunk") -> str:
     """Format a chunk as SSE event."""
     return f"event: {event_type}\ndata: {json.dumps(data)}\n\n"

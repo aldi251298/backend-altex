@@ -19,7 +19,7 @@ from constants import (
     SSE_TIMEOUT_SECONDS,
     time_ns,
 )
-from utils.streaming import format_sse_data, format_sse_done, format_sse_error
+from utils.streaming import format_sse_data, format_sse_done, format_sse_error, _parse_sse_event
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +162,12 @@ async def generate_chat_completion(
                         yield format_sse_done()
                         return
 
-                    async for raw_line in response.content:
+                    # ── Buffer-based SSE parser (TCP chunks ≠ SSE events) ──
+                    sse_buffer = ""
+                    stream_done = False
+                    async for raw_chunk in response.content:
+                        if stream_done:
+                            break
                         # Client disconnect check
                         if request and hasattr(request, "is_disconnected"):
                             try:
@@ -172,62 +177,82 @@ async def generate_chat_completion(
                             except Exception:
                                 pass
 
-                        line = raw_line.decode("utf-8", errors="replace").strip()
-                        if not line or not line.startswith("data: "):
-                            continue
+                        # Accumulate chunk into buffer
+                        sse_buffer += raw_chunk.decode("utf-8", errors="replace")
 
-                        data = line[6:]
-                        if data == "[DONE]":
-                            break
+                        # Split on SSE event boundary (\n\n)
+                        while "\n\n" in sse_buffer:
+                            event_text, sse_buffer = sse_buffer.split("\n\n", 1)
 
-                        try:
-                            chunk = json.loads(data)
-                        except json.JSONDecodeError:
-                            logger.debug("Malformed SSE chunk (skipped): %s", data[:80])
-                            continue
+                            # Parse each line in the event
+                            for line in event_text.split("\n"):
+                                line = line.strip()
+                                if not line:
+                                    continue
 
-                        choice = (chunk.get("choices") or [{}])[0]
-                        delta = choice.get("delta", {})
+                                # Extract data payload
+                                parsed_data = _parse_sse_event(line)
+                                if parsed_data is None:
+                                    continue
 
-                        # Strip internal reasoning (Qwen3 outputs delta.reasoning)
-                        delta.pop("reasoning", None)
-                        delta.pop("reasoning_content", None)
+                                if parsed_data == "[DONE]":
+                                    # Mark stream done without returning — let DB save complete
+                                    iter_finish_reason = iter_finish_reason or "stop"
+                                    stream_done = True
+                                    break  # break while loop, async for guard will exit next iteration
 
-                        # Accumulate content
-                        if delta.get("content"):
-                            iter_content += delta["content"]
+                                try:
+                                    chunk = json.loads(parsed_data)
+                                except json.JSONDecodeError:
+                                    logger.debug("Malformed SSE chunk (skipped): %s", parsed_data[:80])
+                                    continue
 
-                        # Accumulate tool calls (parallel: keyed by index)
-                        if delta.get("tool_calls"):
-                            for tc in delta["tool_calls"]:
-                                idx = str(tc.get("index", 0))
-                                if idx not in iter_tool_calls:
-                                    iter_tool_calls[idx] = {
-                                        "id": tc.get("id", ""),
-                                        "type": "function",
-                                        "function": {
-                                            "name": tc.get("function", {}).get("name", ""),
-                                            "arguments": tc.get("function", {}).get("arguments", ""),
-                                        },
-                                        "index": int(idx),
-                                    }
-                                else:
-                                    existing = iter_tool_calls[idx]
-                                    fn_args = tc.get("function", {}).get("arguments", "")
-                                    if fn_args:
-                                        existing["function"]["arguments"] += fn_args
-                                    if tc.get("id") and not existing["id"]:
-                                        existing["id"] = tc["id"]
-                                    if tc.get("function", {}).get("name") and not existing["function"]["name"]:
-                                        existing["function"]["name"] = tc["function"]["name"]
+                                choice = (chunk.get("choices") or [{}])[0]
+                                delta = choice.get("delta", {})
 
-                        if chunk.get("usage"):
-                            usage_data = chunk["usage"]
+                                # Strip internal reasoning (Qwen3 outputs delta.reasoning)
+                                delta.pop("reasoning", None)
+                                delta.pop("reasoning_content", None)
 
-                        iter_finish_reason = choice.get("finish_reason") or iter_finish_reason
+                                # Accumulate content
+                                if delta.get("content"):
+                                    iter_content += delta["content"]
 
-                        # Forward chunk to client (with cleaned delta)
-                        yield format_sse_data(chunk)
+                                # Accumulate tool calls (parallel: keyed by index)
+                                if delta.get("tool_calls"):
+                                    for tc in delta["tool_calls"]:
+                                        idx = str(tc.get("index", 0))
+                                        if idx not in iter_tool_calls:
+                                            iter_tool_calls[idx] = {
+                                                "id": tc.get("id", ""),
+                                                "type": "function",
+                                                "function": {
+                                                    "name": tc.get("function", {}).get("name", ""),
+                                                    "arguments": tc.get("function", {}).get("arguments", ""),
+                                                },
+                                                "index": int(idx),
+                                            }
+                                        else:
+                                            existing = iter_tool_calls[idx]
+                                            fn_args = tc.get("function", {}).get("arguments", "")
+                                            if fn_args:
+                                                existing["function"]["arguments"] += fn_args
+                                            if tc.get("id") and not existing["id"]:
+                                                existing["id"] = tc["id"]
+                                            if tc.get("function", {}).get("name") and not existing["function"]["name"]:
+                                                existing["function"]["name"] = tc["function"]["name"]
+
+                                if chunk.get("usage"):
+                                    usage_data = chunk["usage"]
+
+                                iter_finish_reason = choice.get("finish_reason") or iter_finish_reason
+
+                                # Skip forwarding empty delta chunks (Qwen3 sends many reasoning-only chunks)
+                                if not delta and not choice.get("finish_reason") and not chunk.get("usage"):
+                                    continue
+
+                                # Forward chunk to client (with cleaned delta)
+                                yield format_sse_data(chunk)
 
         except aiohttp.ClientConnectorError as e:
             logger.error("Provider connection refused: %s", e)
