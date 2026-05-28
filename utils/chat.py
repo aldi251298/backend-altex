@@ -247,8 +247,13 @@ async def generate_chat_completion(
 
                                 iter_finish_reason = choice.get("finish_reason") or iter_finish_reason
 
-                                # Skip forwarding empty delta chunks (Qwen3 sends many reasoning-only chunks)
-                                if not delta and not choice.get("finish_reason") and not chunk.get("usage"):
+                                # Skip chunks with no meaningful content (Qwen3 sends many empty/reasoning-only chunks)
+                                has_content = bool(delta.get("content"))  # "" → False
+                                has_tool_calls = bool(delta.get("tool_calls"))
+                                has_finish = bool(choice.get("finish_reason"))
+                                has_usage = bool(chunk.get("usage"))
+
+                                if not any([has_content, has_tool_calls, has_finish, has_usage]):
                                     continue
 
                                 # Forward chunk to client (with cleaned delta)
