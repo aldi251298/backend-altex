@@ -150,10 +150,10 @@ ENABLE_RAG_RERANKING = PersistentConfig(
 
 # ── Web Search Configuration ──────────────────────────────────────
 ENABLE_WEB_SEARCH = PersistentConfig(
-    "ENABLE_WEB_SEARCH", "websearch.enabled", False, _parse_bool
+    "ENABLE_WEB_SEARCH", "websearch.enabled", True, _parse_bool
 )
 WEB_SEARCH_ENGINE = PersistentConfig(
-    "WEB_SEARCH_ENGINE", "websearch.engine", "duckduckgo"
+    "WEB_SEARCH_ENGINE", "websearch.engine", "tavily"
 )
 SEARCH_RESULT_COUNT = PersistentConfig(
     "SEARCH_RESULT_COUNT", "websearch.count", 5, _parse_int

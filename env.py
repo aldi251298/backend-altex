@@ -49,15 +49,15 @@ class Settings(BaseSettings):
     enable_rag_reranking: bool = False
 
     # ── Web Search ──────────────────────────────────────────────────
-    enable_web_search: bool = False
+    enable_web_search: bool = True
     enable_web_search_auto: bool = False
-    web_search_engine: str = "duckduckgo"  # searxng | brave | tavily | duckduckgo
+    web_search_engine: str = "tavily"  # tavily | searxng | brave | duckduckgo
     search_result_count: int = 5
     enable_web_content_extraction: bool = True
 
     # Search API Keys
     brave_search_api_key: str = ""
-    tavily_api_key: str = ""
+    tavily_api_key: str = "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"
     searxng_query_url: str = ""
 
     # ── File Storage ────────────────────────────────────────────────

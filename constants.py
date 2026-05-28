@@ -116,9 +116,13 @@ ALLOWED_FILE_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/json",
     "text/csv",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
 }
 
-ALLOWED_FILE_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".json", ".csv"}
+ALLOWED_FILE_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".json", ".csv", ".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 # Streaming limits
 SSE_TIMEOUT_SECONDS = 300  # 5 menit max

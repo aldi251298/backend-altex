@@ -96,11 +96,13 @@ async def generate_chat_completion(
     # These are forwarded to vLLM via chat_template_kwargs
     enable_thinking: bool | None = form_data.get("enable_thinking")   # None = not set (use model default)
     preserve_thinking: bool | None = form_data.get("preserve_thinking")
+    
+    # Extract chat_template_kwargs if sent directly from client
+    chat_template_kwargs: dict | None = form_data.get("chat_template_kwargs")
 
     extra_params = {
         k: v for k, v in form_data.items()
-        if k not in ("model", "messages", "stream", "files", "web_search", "chat_id",
-                     "enable_thinking", "preserve_thinking")
+        if k not in ("model", "messages", "stream", "files", "web_search", "chat_id", "enable_thinking", "preserve_thinking", "chat_template_kwargs")
     }
 
     if not messages:
@@ -130,9 +132,13 @@ async def generate_chat_completion(
     body = apply_model_params_to_body(model.get("params", {}), body)
 
     # ── 3b. Apply thinking toggle ────────────────────────────────────────────
-    # Handles: enable_thinking=False → chat_template_kwargs={"enable_thinking": False}
-    # Also handles chat_template_kwargs already in body (from extra_params pass-through)
-    body = apply_thinking_params(body, enable_thinking, preserve_thinking)
+    # Priority: chat_template_kwargs from client > enable_thinking/preserve_thinking params
+    if chat_template_kwargs:
+        # Client sent chat_template_kwargs directly (e.g., {"enable_thinking": false})
+        body["chat_template_kwargs"] = chat_template_kwargs
+    else:
+        # Use enable_thinking/preserve_thinking params
+        body = apply_thinking_params(body, enable_thinking, preserve_thinking)
 
     # ── 4. Filter pipeline (inlet) ───────────────────────────────────────────
     body = await process_filter_functions(
@@ -145,12 +151,56 @@ async def generate_chat_completion(
 
     # ── 5. RAG (files) ───────────────────────────────────────────────────────
     if files:
+        # Emit status event before RAG processing
+        status_event = {
+            "type": "status",
+            "data": {
+                "description": "Mengambil konteks dari dokumen...",
+                "action": "rag_retrieval",
+                "done": False,
+            },
+        }
+        yield f"data: {json.dumps(status_event)}\n\n"
+        
         body = await chat_completion_files_handler(body=body, user=user, event_emitter=None)
+        
+        # Emit completion status
+        done_event = {
+            "type": "status",
+            "data": {
+                "description": "Konteks dokumen berhasil dimuat",
+                "action": "rag_retrieval",
+                "done": True,
+            },
+        }
+        yield f"data: {json.dumps(done_event)}\n\n"
 
     # ── 6. Web search ────────────────────────────────────────────────────────
     body.pop("web_search", None)
     if web_search:
+        # Emit status event before web search
+        search_start_event = {
+            "type": "status",
+            "data": {
+                "description": "Mencari informasi di web...",
+                "action": "web_search",
+                "done": False,
+            },
+        }
+        yield f"data: {json.dumps(search_start_event)}\n\n"
+        
         body = await chat_completion_web_search_handler(body=body, user=user, event_emitter=None)
+        
+        # Emit completion status
+        search_done_event = {
+            "type": "status",
+            "data": {
+                "description": "Pencarian web selesai",
+                "action": "web_search",
+                "done": True,
+            },
+        }
+        yield f"data: {json.dumps(search_done_event)}\n\n"
 
     # ── 7. Tool spec injection ───────────────────────────────────────────────
     body = await prepare_tools_for_request(body=body, model=model, user=user, settings=app_settings)

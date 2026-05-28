@@ -20,17 +20,11 @@ async def chat_completion_files_handler(
 ) -> dict:
     """
     RAG handler: retrieve relevant chunks and inject into messages.
+    Note: event_emitter is None in streaming mode - status is sent via SSE directly.
     """
     file_ids = [f["id"] for f in body.get("files", []) if f.get("type") == "file"]
     if not file_ids:
         return body
-
-    # Emit status to Flutter
-    if event_emitter:
-        await event_emitter({
-            "type": "status",
-            "data": {"description": "Mengambil konteks dari dokumen...", "done": False}
-        })
 
     # Get collection names from file IDs (placeholder - would query DB)
     collections = await _get_collection_names_by_ids(file_ids)
@@ -72,27 +66,6 @@ async def chat_completion_files_handler(
         context_str = _format_rag_context(unique_chunks)
         body = _inject_context_to_messages(body, context_str)
 
-        # Emit citation events to Flutter
-        if event_emitter:
-            for chunk in unique_chunks[:3]:  # Limit citations
-                await event_emitter({
-                    "type": "citation",
-                    "data": {
-                        "document": [chunk.get("text", "")],
-                        "metadata": [chunk.get("metadata", {})],
-                        "source": {"name": chunk.get("metadata", {}).get("source", "Unknown")},
-                    }
-                })
-
-    if event_emitter:
-        await event_emitter({
-            "type": "status",
-            "data": {
-                "description": f"Ditemukan {len(unique_chunks)} konteks relevan",
-                "done": True,
-            }
-        })
-
     # Remove 'files' from body before sending to AI provider
     body.pop("files", None)
     return body
@@ -105,13 +78,8 @@ async def chat_completion_web_search_handler(
 ) -> dict:
     """
     Web search handler: query search engines, extract content, inject results.
+    Note: event_emitter is None in streaming mode - status is sent via SSE directly.
     """
-    if event_emitter:
-        await event_emitter({
-            "type": "status",
-            "data": {"description": "Membuat query pencarian...", "done": False}
-        })
-
     # Extract last user message
     user_query = _extract_last_user_message(body["messages"])
     if not user_query:
@@ -119,15 +87,6 @@ async def chat_completion_web_search_handler(
 
     # Generate optimized queries (placeholder)
     queries = [user_query]
-
-    if event_emitter:
-        await event_emitter({
-            "type": "status",
-            "data": {
-                "description": f"Mencari: {queries[0]}",
-                "done": False,
-            }
-        })
 
     # Execute search (placeholder - would call retrieval/web modules)
     all_results = []
@@ -138,45 +97,11 @@ async def chat_completion_web_search_handler(
     valid_results = [r for r in all_results if r]
 
     if not valid_results:
-        if event_emitter:
-            await event_emitter({
-                "type": "status",
-                "data": {"description": "Pencarian tidak menghasilkan hasil", "done": True}
-            })
         return body
 
     # Format context
     context_str = _format_search_context(valid_results)
     body = _inject_context_to_messages(body, context_str)
-
-    # Emit citations
-    if event_emitter:
-        for results in valid_results:
-            for result in results[:3]:
-                await event_emitter({
-                    "type": "citation",
-                    "data": {
-                        "document": [result.get("snippet", "")],
-                        "metadata": [{
-                            "source": result.get("url", ""),
-                            "name": result.get("title", result.get("url", ""))
-                        }],
-                        "source": {
-                            "name": result.get("title", result.get("url", "")),
-                            "url": result.get("url", ""),
-                        },
-                    }
-                })
-
-    total_results = sum(len(r) for r in valid_results)
-    if event_emitter:
-        await event_emitter({
-            "type": "status",
-            "data": {
-                "description": f"Pencarian selesai ({total_results} hasil)",
-                "done": True,
-            }
-        })
 
     return body
 
@@ -328,21 +253,32 @@ async def _web_search(query: str, count: int = 5) -> list[dict]:
     """
     Search web using configured search engine.
     
-    Supports: duckduckgo, brave, tavily, searxng
+    Priority: tavily > brave > searxng > duckduckgo
     """
     from env import settings as app_settings
     
     engine = app_settings.web_search_engine
     
+    # Priority 1: Tavily (fastest and most reliable)
+    if engine == "tavily" or (engine == "duckduckgo" and app_settings.tavily_api_key):
+        result = await _web_search_tavily(query, count, app_settings.tavily_api_key)
+        if result:
+            return result
+    
+    # Priority 2: Brave
     if engine == "brave":
-        return await _web_search_brave(query, count, app_settings.brave_search_api_key)
-    elif engine == "tavily":
-        return await _web_search_tavily(query, count, app_settings.tavily_api_key)
-    elif engine == "searxng":
-        return await _web_search_searxng(query, count, app_settings.searxng_query_url)
-    else:
-        # Default to DuckDuckGo
-        return await _web_search_duckduckgo(query, count)
+        result = await _web_search_brave(query, count, app_settings.brave_search_api_key)
+        if result:
+            return result
+    
+    # Priority 3: SearXNG
+    if engine == "searxng":
+        result = await _web_search_searxng(query, count, app_settings.searxng_query_url)
+        if result:
+            return result
+    
+    # Fallback: DuckDuckGo (free but slower)
+    return await _web_search_duckduckgo(query, count)
 
 
 async def _web_search_duckduckgo(query: str, count: int) -> list[dict]:

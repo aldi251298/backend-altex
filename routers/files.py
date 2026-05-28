@@ -13,7 +13,7 @@ router = APIRouter()
 # Anonymous user ID (no auth required)
 ANONYMOUS_USER_ID = "anonymous"
 
-ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".json", ".csv"}
+ALLOWED_EXTENSIONS = {".txt", ".md", ".pdf", ".docx", ".json", ".csv", ".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 
 @router.post("/upload", summary="Upload file (multipart/form-data)", status_code=201)
@@ -102,6 +102,21 @@ async def get_file(
     
     return file_obj.to_dict()
 
+
+from fastapi.responses import FileResponse
+
+@router.get("/{file_id}/download", summary="Download file")
+async def download_file(file_id: str):
+    """Serve file for multimodal image_url or direct download. No auth required."""
+    async with async_session_factory() as db:
+        file_obj = await FileModel.get_by_id(db, file_id)
+    if not file_obj:
+        raise HTTPException(status_code=404, detail="File tidak ditemukan")
+    return FileResponse(
+        file_obj.file_path,
+        media_type=file_obj.content_type or "application/octet-stream",
+        filename=file_obj.filename,
+    )
 
 @router.delete("/{file_id}", summary="Hapus file + koleksi vector")
 async def delete_file(
