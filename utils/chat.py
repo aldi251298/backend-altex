@@ -21,7 +21,40 @@ from constants import (
 )
 from utils.streaming import format_sse_data, format_sse_done, format_sse_error, _parse_sse_event
 
+# ── Top-level imports (avoid per-request cold path overhead) ─────────────────
+from utils.payload import (
+    apply_system_prompt_to_body,
+    apply_model_params_to_body,
+    strip_unsupported_params,
+    apply_thinking_params,
+)
+from utils.filter import process_filter_functions
+from utils.middleware import (
+    chat_completion_files_handler,
+    chat_completion_web_search_handler,
+)
+from utils.tools import (
+    prepare_tools_for_request,
+    execute_tool_calls_parallel,
+)
+from utils.task import run_post_completion_tasks
+from database import async_session_factory
+from models.chats import Chat
+from sqlalchemy import select, text
+from env import settings as app_settings
+
 logger = logging.getLogger(__name__)
+
+# ── Shared aiohttp session (created once, reused forever) ────────────────────
+_http_session: aiohttp.ClientSession | None = None
+
+
+async def _get_http_session() -> aiohttp.ClientSession:
+    global _http_session
+    if _http_session is None or _http_session.closed:
+        _http_session = aiohttp.ClientSession()
+    return _http_session
+
 
 # ── In-memory model config cache (5 min TTL) ─────────────────────────────────
 _model_cache: dict[str, dict] = {}
@@ -93,7 +126,6 @@ async def generate_chat_completion(
     body.update(extra_params)
 
     # ── 3. Apply system prompt + model params ────────────────────────────────
-    from utils.payload import apply_system_prompt_to_body, apply_model_params_to_body, strip_unsupported_params, apply_thinking_params
     body = apply_system_prompt_to_body(model.get("params", {}), body)
     body = apply_model_params_to_body(model.get("params", {}), body)
 
@@ -103,7 +135,6 @@ async def generate_chat_completion(
     body = apply_thinking_params(body, enable_thinking, preserve_thinking)
 
     # ── 4. Filter pipeline (inlet) ───────────────────────────────────────────
-    from utils.filter import process_filter_functions
     body = await process_filter_functions(
         filters=model.get("filters", []),
         body=body,
@@ -114,18 +145,14 @@ async def generate_chat_completion(
 
     # ── 5. RAG (files) ───────────────────────────────────────────────────────
     if files:
-        from utils.middleware import chat_completion_files_handler
         body = await chat_completion_files_handler(body=body, user=user, event_emitter=None)
 
     # ── 6. Web search ────────────────────────────────────────────────────────
     body.pop("web_search", None)
     if web_search:
-        from utils.middleware import chat_completion_web_search_handler
         body = await chat_completion_web_search_handler(body=body, user=user, event_emitter=None)
 
     # ── 7. Tool spec injection ───────────────────────────────────────────────
-    from utils.tools import prepare_tools_for_request
-    from env import settings as app_settings
     body = await prepare_tools_for_request(body=body, model=model, user=user, settings=app_settings)
 
     # ── 8. Strip unsupported params ──────────────────────────────────────────
@@ -147,9 +174,9 @@ async def generate_chat_completion(
         iter_finish_reason: str | None = None
 
         try:
-            async with aiohttp.ClientSession() as session:
-                timeout = aiohttp.ClientTimeout(total=SSE_TIMEOUT_SECONDS)
-                async with session.post(
+            session = await _get_http_session()
+            timeout = aiohttp.ClientTimeout(total=SSE_TIMEOUT_SECONDS)
+            async with session.post(
                     url=f"{provider_url}/chat/completions",
                     headers=provider_headers,
                     json=body,
@@ -295,7 +322,6 @@ async def generate_chat_completion(
             yield f"data: {json.dumps(status_event)}\n\n"
 
             # Execute all tool calls IN PARALLEL
-            from utils.tools import execute_tool_calls_parallel
             tool_results = await execute_tool_calls_parallel(tool_calls_list)
 
             # Emit done status
@@ -341,7 +367,6 @@ async def generate_chat_completion(
 
     # ── 11. Background tasks (title/tag generation) ──────────────────────────
     if finish_reason == "stop" and background_tasks:
-        from utils.task import run_post_completion_tasks
         background_tasks.add_task(
             run_post_completion_tasks,
             chat_id=chat_id,
@@ -369,9 +394,6 @@ async def _get_model_config(model_id: str) -> dict | None:
     now = time.time()
     if model_id in _model_cache and now - _model_cache_ts.get(model_id, 0) < DEFAULT_MODEL_CACHE_TTL:
         return _model_cache[model_id]
-
-    from database import async_session_factory
-    from sqlalchemy import text
 
     parts = model_id.split(".", 1)
     provider_prefix = parts[0] if len(parts) > 1 else model_id
@@ -455,7 +477,6 @@ async def _get_provider_for_model(model: dict) -> dict | None:
         }
 
     # Fallback to env setting
-    from env import settings as app_settings
     fallback = app_settings.openai_base_url or "http://localhost:8000/v1"
     return {
         "name": "default",
@@ -527,10 +548,6 @@ async def _save_completion_to_db(
             "completion_tokens": usage.get("completion_tokens", 0),
             "total_tokens": usage.get("total_tokens", 0),
         }
-
-    from database import async_session_factory
-    from models.chats import Chat
-    from sqlalchemy import select, text
 
     async with async_session_factory() as db:
         result = await db.execute(select(Chat).where(Chat.id == chat_id))
