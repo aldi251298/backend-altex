@@ -84,8 +84,6 @@ async def generate_chat_completion(
     8. Save to DB
     9. Trigger background tasks (title/tag generation)
     """
-    _t0 = time.perf_counter()
-
     model_id = form_data.get("model", "")
     messages: list[dict] = form_data.get("messages", [])
     stream: bool = form_data.get("stream", True)
@@ -112,14 +110,12 @@ async def generate_chat_completion(
 
     # ── 1. Resolve model + provider ──────────────────────────────────────────
     model = await _get_model_config(model_id)
-    logger.warning(f"⏱ T1_model_config: {((time.perf_counter()-_t0)*1000):.0f}ms")
     if not model:
         yield format_sse_error(404, f"Model '{model_id}' tidak ditemukan")
         yield format_sse_done()
         return
 
     provider = await _get_provider_for_model(model)
-    logger.warning(f"⏱ T2_provider: {((time.perf_counter()-_t0)*1000):.0f}ms")
     if not provider:
         yield format_sse_error(503, "Provider untuk model tidak ditemukan")
         yield format_sse_done()
@@ -137,7 +133,6 @@ async def generate_chat_completion(
     # Handles: enable_thinking=False → chat_template_kwargs={"enable_thinking": False}
     # Also handles chat_template_kwargs already in body (from extra_params pass-through)
     body = apply_thinking_params(body, enable_thinking, preserve_thinking)
-    logger.warning(f"⏱ T3_body_prep: {((time.perf_counter()-_t0)*1000):.0f}ms")
 
     # ── 4. Filter pipeline (inlet) ───────────────────────────────────────────
     body = await process_filter_functions(
@@ -147,7 +142,6 @@ async def generate_chat_completion(
         event_emitter=None,
         phase="inlet",
     )
-    logger.warning(f"⏱ T4_filter: {((time.perf_counter()-_t0)*1000):.0f}ms")
 
     # ── 5. RAG (files) ───────────────────────────────────────────────────────
     if files:
@@ -160,7 +154,6 @@ async def generate_chat_completion(
 
     # ── 7. Tool spec injection ───────────────────────────────────────────────
     body = await prepare_tools_for_request(body=body, model=model, user=user, settings=app_settings)
-    logger.warning(f"⏱ T5_tools_prep: {((time.perf_counter()-_t0)*1000):.0f}ms")
 
     # ── 8. Strip unsupported params ──────────────────────────────────────────
     body = strip_unsupported_params(body, model.get("capabilities", {}))
@@ -181,7 +174,6 @@ async def generate_chat_completion(
         iter_finish_reason: str | None = None
 
         try:
-            logger.warning(f"⏱ T6_pre_request: {((time.perf_counter()-_t0)*1000):.0f}ms")
             session = await _get_http_session()
             timeout = aiohttp.ClientTimeout(total=SSE_TIMEOUT_SECONDS)
             async with session.post(
@@ -201,8 +193,6 @@ async def generate_chat_completion(
                     sse_buffer = ""
                     stream_done = False
                     async for raw_chunk in response.content:
-                        logger.warning(f"⏱ FIRST_CHUNK_RECEIVED: {((time.perf_counter()-_t0)*1000):.0f}ms")
-                        break  # TEMP: exit after first chunk to measure network latency
                         if stream_done:
                             break
                         # Client disconnect check
