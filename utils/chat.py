@@ -201,6 +201,8 @@ async def generate_chat_completion(
                     sse_buffer = ""
                     stream_done = False
                     async for raw_chunk in response.content:
+                        logger.warning(f"⏱ FIRST_CHUNK_RECEIVED: {((time.perf_counter()-_t0)*1000):.0f}ms")
+                        break  # TEMP: exit after first chunk to measure network latency
                         if stream_done:
                             break
                         # Client disconnect check
