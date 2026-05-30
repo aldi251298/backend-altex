@@ -107,38 +107,20 @@ def decode_token(token: str) -> dict:
 # ============================================================================
 
 
-async def get_verified_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-) -> dict:
+async def get_verified_user() -> dict:
     """
     FastAPI dependency to validate JWT and extract user info.
     Returns user dict with sub (user_id), email, role.
+    
+    NOTE: For free version, always returns a dummy user without authentication.
+    No Authorization header required.
     """
-    token = credentials.credentials
-
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        if payload.get("type") != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type",
-            )
-        user_id = payload.get("sub")
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload",
-            )
-    except JWTError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token tidak valid: {str(e)}",
-        )
-
+    # For free version, always return a dummy user
+    # Skip JWT validation entirely
     return {
-        "id": payload.get("sub"),
-        "email": payload.get("email"),
-        "role": payload.get("role"),
+        "id": "free_user_001",
+        "email": "user@altexchat.com",
+        "role": "user",
     }
 
 
@@ -163,3 +145,74 @@ async def get_optional_user(
         }
     except JWTError:
         return None
+
+
+# ============================================================================
+# Device User Management
+# ============================================================================
+
+
+async def get_or_create_device_user(device_id: str) -> dict:
+    """
+    Get or create a user for a device ID.
+    Creates a user in the database if it doesn't exist.
+    """
+    from database import async_session_factory
+    from models.users import User
+    from constants import time_ns
+    
+    async with async_session_factory() as db:
+        # Check if user exists
+        from sqlalchemy import select
+        result = await db.execute(
+            select(User).where(User.id == device_id)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            # Create new device user
+            user = User(
+                id=device_id,
+                email=f"{device_id}@device.altexchat.com",
+                name=f"Device User {device_id[:8]}",
+                hashed_password=hash_password(""),  # Empty password for device users
+                role="user",
+                is_active=True,
+                settings={},
+                created_at=time_ns(),
+                updated_at=time_ns(),
+            )
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+        
+        return {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+        }
+
+
+async def get_device_user(device_id: str = None) -> dict:
+    """
+    FastAPI dependency to get or create device user.
+    Looks for X-Device-ID header.
+    """
+    from fastapi import Request
+    from fastapi.params import Depends
+    
+    async def device_user_dependency(request: Request):
+        # Get device ID from header or generate one
+        device_id = request.headers.get("X-Device-ID")
+        if not device_id:
+            # Try to get from query params for backward compatibility
+            device_id = request.query_params.get("device_id")
+        
+        if not device_id:
+            # Generate a random device ID
+            import uuid
+            device_id = f"device_{uuid.uuid4().hex[:16]}"
+        
+        return await get_or_create_device_user(device_id)
+    
+    return Depends(device_user_dependency)

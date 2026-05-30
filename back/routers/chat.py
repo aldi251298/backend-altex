@@ -25,13 +25,11 @@ logger = logging.getLogger(__name__)
 async def chat_completions(
     request: Request,
     body: dict,
-    user=Depends(get_verified_user),
 ):
     """
     Entry point utama chat completion.
     Semua request chat harus melalui endpoint ini karena melewati pipeline lengkap.
     
-    - Validasi JWT
     - System prompt injection
     - Filter pipeline
     - RAG retrieval
@@ -61,7 +59,6 @@ async def chat_completions(
     # Log request
     logger.info(
         "chat_completion_request",
-        user_id=user["id"],
         model=body.get("model", "unknown"),
         message_count=len(messages),
         has_files=bool(body.get("files")),
@@ -71,6 +68,13 @@ async def chat_completions(
     # Generate SSE stream - use async generator wrapper
     async def stream_generator():
         try:
+            # Create user object from request body
+            user_id = body.get("user_id", "anonymous_user")
+            user = {
+                "id": user_id,
+                "email": f"{user_id}@altexchat.com",
+                "role": "user",
+            }
             async for chunk in generate_chat_completion(request, body, user):
                 yield chunk
         except Exception as e:

@@ -498,6 +498,20 @@ async def _save_completion_to_db(
     """
     if not content and not tool_calls:
         return
+    
+    # Ensure user exists in database
+    from utils.auth import get_or_create_device_user
+    try:
+        user = await get_or_create_device_user(user_id)
+        # Use the actual user ID from database (in case it was created)
+        user_id = user["id"]
+    except Exception as e:
+        # Log error but continue - chat might still work
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to ensure user exists: {e}")
+        # Fall back to anonymous user
+        user_id = "anonymous"
 
     message_data = {
         "id": message_id,

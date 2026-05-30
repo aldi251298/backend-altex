@@ -14,16 +14,17 @@ router = APIRouter()
 
 
 @router.get("", summary="Aggregated list dari semua provider")
-async def list_models(
-    user=Depends(get_verified_user),
-):
+async def list_models():
     """
     Fetch dan aggregate models dari semua provider.
     Menggunakan cache 5 menit.
     """
     async with async_session_factory() as db:
         providers = await Provider.get_active(db)
-    models = await get_all_models(user, providers)
+    # Get dummy user for free version
+    from utils.auth import get_verified_user
+    dummy_user = await get_verified_user()
+    models = await get_all_models(dummy_user, providers)
     
     return {"data": models}
 
@@ -38,12 +39,14 @@ async def refresh_models():
 @router.get("/{model_id}", summary="Detail model spesifik")
 async def get_model_detail(
     model_id: str,
-    user=Depends(get_verified_user),
 ):
     """Get detail model spesifik."""
     async with async_session_factory() as db:
         providers = await Provider.get_active(db)
-    models = await get_all_models(user, providers)
+    # Get dummy user for free version
+    from utils.auth import get_verified_user
+    dummy_user = await get_verified_user()
+    models = await get_all_models(dummy_user, providers)
     
     model = next((m for m in models if m["id"] == model_id), None)
     
