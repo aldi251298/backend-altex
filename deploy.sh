@@ -459,9 +459,7 @@ async def create_admin():
         from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
         from sqlalchemy.orm import sessionmaker
         from sqlalchemy import text, select
-        from passlib.context import CryptContext
-        
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        import bcrypt
         
         engine = create_async_engine("${DATABASE_URL}", echo=False)
         async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -479,7 +477,7 @@ async def create_admin():
                 return
             
             # Create admin user
-            hashed_password = pwd_context.hash("${admin_password}")
+            hashed_password = bcrypt.hashpw("${admin_password}".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             await session.execute(
                 text("""
                     INSERT INTO users (email, hashed_password, is_active, is_admin, created_at, updated_at)
