@@ -24,7 +24,7 @@ async def search_duckduckgo(
         ddgs = DDGS()
         results = await asyncio.to_thread(
             ddgs.text,
-            query=query,
+            query,
             max_results=count,
         )
         

@@ -1,0 +1,97 @@
+INFO:     Started server process [11791]
+INFO:     Waiting for application startup.
+2026-05-31 21:57:51,258 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-05-31 21:57:51,258 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:57:51,260 INFO sqlalchemy.engine.Engine select current_schema()
+2026-05-31 21:57:51,260 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:57:51,262 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-05-31 21:57:51,262 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:57:51,263 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:57:51,265 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:57:51,265 INFO sqlalchemy.engine.Engine [generated in 0.00013s] ('chats', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:57:51,268 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:57:51,268 INFO sqlalchemy.engine.Engine [cached since 0.002809s ago] ('providers', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:57:51,268 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:57:51,268 INFO sqlalchemy.engine.Engine [cached since 0.003469s ago] ('files', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:57:51,269 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:57:51,269 INFO sqlalchemy.engine.Engine [cached since 0.004072s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:57:51,270 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:57:51,270 INFO sqlalchemy.engine.Engine [cached since 0.004672s ago] ('app_config', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:57:51,270 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:57:51,272 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:57:51,273 INFO sqlalchemy.engine.Engine SELECT config_path, value FROM app_config
+2026-05-31 21:57:51,273 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2026-05-31 21:57:51,274 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:57:51,276 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:57:51,278 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.name, users.hashed_password, users.role, users.is_active, users.settings, users.created_at, users.updated_at 
+FROM users 
+WHERE users.role = $1::VARCHAR
+2026-05-31 21:57:51,278 INFO sqlalchemy.engine.Engine [generated in 0.00012s] ('admin',)
+2026-05-31 21:57:51,280 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
+INFO:     127.0.0.1:45272 - "GET /health HTTP/1.1" 200 OK
+2026-05-31 21:59:25,640 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:59:25,640 INFO sqlalchemy.engine.Engine 
+                SELECT id, name, base_url, api_key, auth_type, prefix, extra_config
+                FROM providers
+                WHERE is_active = true
+                  AND (prefix = $1 OR name ILIKE $2)
+                LIMIT 1
+            
+2026-05-31 21:59:25,640 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('Qwen/Qwen3', 'Qwen/Qwen3')
+2026-05-31 21:59:25,643 INFO sqlalchemy.engine.Engine SELECT id, name, base_url, api_key, auth_type, prefix, extra_config FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:59:25,643 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2026-05-31 21:59:25,644 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:59:25,646 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:59:25,646 INFO sqlalchemy.engine.Engine SELECT value FROM app_config WHERE config_path = $1
+2026-05-31 21:59:25,646 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ('users.anonymous.tools',)
+2026-05-31 21:59:25,648 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:33526 - "POST /api/chat/completions HTTP/1.1" 500 Internal Server Error
+2026-05-31 21:59:32,395 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:59:32,395 INFO sqlalchemy.engine.Engine SELECT value FROM app_config WHERE config_path = $1
+2026-05-31 21:59:32,395 INFO sqlalchemy.engine.Engine [cached since 6.749s ago] ('users.anonymous.tools',)
+2026-05-31 21:59:32,396 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:59:37,256 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:59:37,257 INFO sqlalchemy.engine.Engine SELECT chats.id, chats.user_id, chats.title, chats.chat, chats.is_shared, chats.share_id, chats.is_archived, chats.is_pinned, chats.folder_id, chats.created_at, chats.updated_at 
+FROM chats 
+WHERE chats.id = $1::VARCHAR
+2026-05-31 21:59:37,257 INFO sqlalchemy.engine.Engine [generated in 0.00010s] ('6774d4e5-b472-42f1-a3fc-5c2e1ae66b4f',)
+2026-05-31 21:59:37,259 INFO sqlalchemy.engine.Engine INSERT INTO chats (id, user_id, title, chat, is_shared, share_id, is_archived, is_pinned, folder_id, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSONB, $5::BOOLEAN, $6::VARCHAR, $7::BOOLEAN, $8::BOOLEAN, $9::VARCHAR, $10::INTEGER, $11::INTEGER)
+2026-05-31 21:59:37,259 INFO sqlalchemy.engine.Engine [generated in 0.00016s] ('6774d4e5-b472-42f1-a3fc-5c2e1ae66b4f', 'anonymous', 'Chat Baru', '{"title": "Chat Baru", "history": {"messages": {}, "currentId": "d8335d6e-44a9-4316-a5b0-dc2528fcab22"}, "models": ["Qwen/Qwen3.6-35B-A3B-FP8"], "tags": [], "files": []}', False, None, False, False, None, 1780264777, 1780264777)
+2026-05-31 21:59:37,261 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:59:37,263 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:59:37,263 INFO sqlalchemy.engine.Engine 
+                UPDATE chats
+                SET
+                    chat = jsonb_set(
+                        jsonb_set(
+                            chat,
+                            '{history,messages,d8335d6e-44a9-4316-a5b0-dc2528fcab22}',
+                            '{"id": "d8335d6e-44a9-4316-a5b0-dc2528fcab22", "role": "assistant", "content": "\n\nBased on the image, here is a description of the scene:\n\n**The Subject**\nIn the foreground, a person is standing on a rocky shore with their back to the viewer. They appear to be a photographer, wearing a dark coat or jacket and holding a camera with a lens in their right hand. Their posture suggests they are either looking for the perfect angle or simply taking a moment to admire the view.\n\n**The Landscape**\nThe scene is dominated by a large, calm body of water, likely a lake. The water is incredibly still, creating a mirror-like reflection of the sky and the landscape. In the distance, a range of mountains or hills stretches across the horizon, partially obscured by low-hanging clouds.\n\n**The Sky**\nThe sky takes up the majority of the upper frame. It is a soft, pale blue, suggesting it might be early morning or dusk. Two long, distinct white streaks cut diagonally across the sky\u2014these are contrails left by airplanes.\n\n**Mood**\nThe overall feeling of the image is one of serenity, solitude, and contemplation. The stillness of the water and the quiet stance of the figure create a peaceful atmosphere.", "tool_calls": null, "done": true, "stopped": false, "timestamp": 1780264777}'::jsonb,
+                            true
+                        ),
+                        '{history,currentId}',
+                        '"d8335d6e-44a9-4316-a5b0-dc2528fcab22"'::jsonb,
+                        true
+                    ),
+                    updated_at = $1
+                WHERE id = $2
+            
+2026-05-31 21:59:37,263 INFO sqlalchemy.engine.Engine [generated in 0.00007s] (1780264777, '6774d4e5-b472-42f1-a3fc-5c2e1ae66b4f')
+2026-05-31 21:59:37,265 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:38154 - "POST /api/chat/completions HTTP/1.1" 200 OK
+2026-05-31 21:59:37,267 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:59:37,267 INFO sqlalchemy.engine.Engine SELECT base_url, api_key FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:59:37,267 INFO sqlalchemy.engine.Engine [generated in 0.00006s] ()
+2026-05-31 21:59:37,268 INFO sqlalchemy.engine.Engine ROLLBACK

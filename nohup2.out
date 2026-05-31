@@ -1,0 +1,169 @@
+INFO:     Started server process [11233]
+INFO:     Waiting for application startup.
+2026-05-31 21:47:02,920 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-05-31 21:47:02,920 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:47:02,922 INFO sqlalchemy.engine.Engine select current_schema()
+2026-05-31 21:47:02,922 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:47:02,925 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-05-31 21:47:02,925 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:47:02,926 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:47:02,928 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:47:02,928 INFO sqlalchemy.engine.Engine [generated in 0.00013s] ('chats', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:47:02,936 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:47:02,936 INFO sqlalchemy.engine.Engine [cached since 0.00785s ago] ('providers', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:47:02,937 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:47:02,937 INFO sqlalchemy.engine.Engine [cached since 0.008796s ago] ('files', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:47:02,938 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:47:02,938 INFO sqlalchemy.engine.Engine [cached since 0.009675s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:47:02,939 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:47:02,939 INFO sqlalchemy.engine.Engine [cached since 0.01061s ago] ('app_config', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:47:02,939 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:47:02,942 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:47:02,942 INFO sqlalchemy.engine.Engine SELECT config_path, value FROM app_config
+2026-05-31 21:47:02,942 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2026-05-31 21:47:02,944 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:47:02,949 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:47:02,952 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.name, users.hashed_password, users.role, users.is_active, users.settings, users.created_at, users.updated_at 
+FROM users 
+WHERE users.role = $1::VARCHAR
+2026-05-31 21:47:02,952 INFO sqlalchemy.engine.Engine [generated in 0.00010s] ('admin',)
+2026-05-31 21:47:02,956 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+INFO:     127.0.0.1:59768 - "POST /admin/login HTTP/1.1" 422 Unprocessable Entity
+2026-05-31 21:47:25,096 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:47:25,096 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.name, users.hashed_password, users.role, users.is_active, users.settings, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+2026-05-31 21:47:25,096 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ('admin@altex.local',)
+2026-05-31 21:47:25,316 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:56532 - "POST /admin/login HTTP/1.1" 302 Found
+2026-05-31 21:47:31,062 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:47:31,062 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.name, users.hashed_password, users.role, users.is_active, users.settings, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+2026-05-31 21:47:31,062 INFO sqlalchemy.engine.Engine [cached since 5.966s ago] ('admin@altex.local',)
+2026-05-31 21:47:31,283 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:56546 - "POST /admin/login HTTP/1.1" 302 Found
+[TAVILY] Found 3 results for query: Python programming
+INFO:     127.0.0.1:58356 - "POST /api/retrieval/web/search HTTP/1.1" 200 OK
+/opt/dlami/nvme/Project/backend-altex/retrieval/web/duckduckgo.py:24: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  ddgs = DDGS()
+INFO:     127.0.0.1:52376 - "POST /api/retrieval/web/search HTTP/1.1" 200 OK
+/opt/dlami/nvme/Project/backend-altex/retrieval/web/duckduckgo.py:24: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  ddgs = DDGS()
+INFO:     127.0.0.1:57312 - "POST /api/retrieval/web/search HTTP/1.1" 200 OK
+2026-05-31 21:50:19,031 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:50:19,032 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers ORDER BY providers.created_at DESC
+2026-05-31 21:50:19,032 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ()
+2026-05-31 21:50:19,035 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:49894 - "GET /api/providers HTTP/1.1" 200 OK
+2026-05-31 21:50:27,624 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:50:27,624 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers 
+WHERE providers.id = $1::VARCHAR
+2026-05-31 21:50:27,625 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('e333287b-f54c-4c18-9341-4e121c7b4caa',)
+2026-05-31 21:50:27,626 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:56754 - "POST /api/providers/e333287b-f54c-4c18-9341-4e121c7b4caa/test HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42448 - "GET /openapi.json HTTP/1.1" 200 OK
+2026-05-31 21:52:17,608 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:17,608 INFO sqlalchemy.engine.Engine 
+                SELECT id, name, base_url, api_key, auth_type, prefix, extra_config
+                FROM providers
+                WHERE is_active = true
+                  AND (prefix = $1 OR name ILIKE $2)
+                LIMIT 1
+            
+2026-05-31 21:52:17,608 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('Qwen/Qwen3', 'Qwen/Qwen3')
+2026-05-31 21:52:17,611 INFO sqlalchemy.engine.Engine SELECT id, name, base_url, api_key, auth_type, prefix, extra_config FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:52:17,611 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2026-05-31 21:52:17,612 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:52:17,614 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:17,614 INFO sqlalchemy.engine.Engine SELECT value FROM app_config WHERE config_path = $1
+2026-05-31 21:52:17,614 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ('users.anonymous.tools',)
+2026-05-31 21:52:17,615 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:52:23,231 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:23,232 INFO sqlalchemy.engine.Engine SELECT chats.id, chats.user_id, chats.title, chats.chat, chats.is_shared, chats.share_id, chats.is_archived, chats.is_pinned, chats.folder_id, chats.created_at, chats.updated_at 
+FROM chats 
+WHERE chats.id = $1::VARCHAR
+2026-05-31 21:52:23,232 INFO sqlalchemy.engine.Engine [generated in 0.00023s] ('b3c2a162-1e26-4706-9044-9925a7345d61',)
+2026-05-31 21:52:23,235 INFO sqlalchemy.engine.Engine INSERT INTO chats (id, user_id, title, chat, is_shared, share_id, is_archived, is_pinned, folder_id, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSONB, $5::BOOLEAN, $6::VARCHAR, $7::BOOLEAN, $8::BOOLEAN, $9::VARCHAR, $10::INTEGER, $11::INTEGER)
+2026-05-31 21:52:23,235 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ('b3c2a162-1e26-4706-9044-9925a7345d61', 'anonymous', 'Chat Baru', '{"title": "Chat Baru", "history": {"messages": {}, "currentId": "42c18dfe-74a2-444d-8754-082b8b9ca890"}, "models": ["Qwen/Qwen3.6-35B-A3B-FP8"], "tags": [], "files": []}', False, None, False, False, None, 1780264343, 1780264343)
+2026-05-31 21:52:23,237 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:52:23,239 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:23,239 INFO sqlalchemy.engine.Engine 
+                UPDATE chats
+                SET
+                    chat = jsonb_set(
+                        jsonb_set(
+                            chat,
+                            '{history,messages,42c18dfe-74a2-444d-8754-082b8b9ca890}',
+                            '{"id": "42c18dfe-74a2-444d-8754-082b8b9ca890", "role": "assistant", "content": "\n\n\n\n\n\nBerikut adalah cuaca terkini di Tokyo:\n\n\ud83c\udf24\ufe0f **Sunny (Cerah)**\n- **Suhu:** 22.7\u00b0C (72.8\u00b0F)\n- **Terasa seperti:** 24.7\u00b0C (76.5\u00b0F)\n- **Kelembaban:** 58%\n- **Angin:** 3.6 km/h dari barat daya (WSW)\n- **Tekanan udara:** 1019.0 mb\n- **Curah hujan:** 0.0 mm\n- **Visibilitas:** 10.0 km\n- **Indeks UV:** 0.5 (rendah)\n\nCuaca saat ini di Tokyo sangat cerah dan nyaman, tanpa peluang hujan atau salju. Suhu sedang hangat dan cocok untuk aktivitas luar ruangan!", "tool_calls": [{"id": "call_ab0397bd5d7c4adb8cba1c36", "type": "function", "function": {"name": "search_web", "arguments": "{\"query\": \"current weather in Tokyo\", \"count\": 5}"}, "index": 0}], "done": true, "stopped": false, "timestamp": 1780264343}'::jsonb,
+                            true
+                        ),
+                        '{history,currentId}',
+                        '"42c18dfe-74a2-444d-8754-082b8b9ca890"'::jsonb,
+                        true
+                    ),
+                    updated_at = $1
+                WHERE id = $2
+            
+2026-05-31 21:52:23,239 INFO sqlalchemy.engine.Engine [generated in 0.00007s] (1780264343, 'b3c2a162-1e26-4706-9044-9925a7345d61')
+2026-05-31 21:52:23,240 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:38348 - "POST /api/chat/completions HTTP/1.1" 200 OK
+2026-05-31 21:52:23,243 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:23,243 INFO sqlalchemy.engine.Engine SELECT base_url, api_key FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:52:23,243 INFO sqlalchemy.engine.Engine [generated in 0.00006s] ()
+2026-05-31 21:52:23,244 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:52:33,643 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:33,643 INFO sqlalchemy.engine.Engine SELECT value FROM app_config WHERE config_path = $1
+2026-05-31 21:52:33,643 INFO sqlalchemy.engine.Engine [cached since 16.03s ago] ('users.anonymous.tools',)
+2026-05-31 21:52:33,644 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:52:36,070 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:36,070 INFO sqlalchemy.engine.Engine SELECT chats.id, chats.user_id, chats.title, chats.chat, chats.is_shared, chats.share_id, chats.is_archived, chats.is_pinned, chats.folder_id, chats.created_at, chats.updated_at 
+FROM chats 
+WHERE chats.id = $1::VARCHAR
+2026-05-31 21:52:36,070 INFO sqlalchemy.engine.Engine [cached since 12.84s ago] ('67db3ad7-5c97-4c7a-a6b0-fb82ad3ebc13',)
+2026-05-31 21:52:36,071 INFO sqlalchemy.engine.Engine INSERT INTO chats (id, user_id, title, chat, is_shared, share_id, is_archived, is_pinned, folder_id, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSONB, $5::BOOLEAN, $6::VARCHAR, $7::BOOLEAN, $8::BOOLEAN, $9::VARCHAR, $10::INTEGER, $11::INTEGER)
+2026-05-31 21:52:36,071 INFO sqlalchemy.engine.Engine [cached since 12.84s ago] ('67db3ad7-5c97-4c7a-a6b0-fb82ad3ebc13', 'anonymous', 'Chat Baru', '{"title": "Chat Baru", "history": {"messages": {}, "currentId": "535c0935-b052-4401-931d-402a3906f821"}, "models": ["Qwen/Qwen3.6-35B-A3B-FP8"], "tags": [], "files": []}', False, None, False, False, None, 1780264356, 1780264356)
+2026-05-31 21:52:36,072 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:52:36,074 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:36,074 INFO sqlalchemy.engine.Engine 
+                UPDATE chats
+                SET
+                    chat = jsonb_set(
+                        jsonb_set(
+                            chat,
+                            '{history,messages,535c0935-b052-4401-931d-402a3906f821}',
+                            '{"id": "535c0935-b052-4401-931d-402a3906f821", "role": "assistant", "content": "\n\nI cannot see the image you are referring to. Please upload the image or provide a link to it, and I will be happy to describe it for you.", "tool_calls": null, "done": true, "stopped": false, "timestamp": 1780264356}'::jsonb,
+                            true
+                        ),
+                        '{history,currentId}',
+                        '"535c0935-b052-4401-931d-402a3906f821"'::jsonb,
+                        true
+                    ),
+                    updated_at = $1
+                WHERE id = $2
+            
+2026-05-31 21:52:36,074 INFO sqlalchemy.engine.Engine [generated in 0.00006s] (1780264356, '67db3ad7-5c97-4c7a-a6b0-fb82ad3ebc13')
+2026-05-31 21:52:36,076 INFO sqlalchemy.engine.Engine COMMIT
+INFO:     127.0.0.1:39448 - "POST /api/chat/completions HTTP/1.1" 200 OK
+2026-05-31 21:52:36,078 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:52:36,078 INFO sqlalchemy.engine.Engine SELECT base_url, api_key FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:52:36,078 INFO sqlalchemy.engine.Engine [cached since 12.84s ago] ()
+2026-05-31 21:52:36,079 INFO sqlalchemy.engine.Engine ROLLBACK
+[TAVILY] Found 3 results for query: test query
+INFO:     127.0.0.1:53744 - "POST /api/retrieval/web/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53758 - "POST /api/retrieval/web/extract HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:53034 - "GET /api/config/rag HTTP/1.1" 200 OK

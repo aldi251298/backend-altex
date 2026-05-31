@@ -11,6 +11,8 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from config import config_manager
 from database import async_session_factory, close_db, init_db
@@ -63,6 +65,15 @@ async def lifespan(app: FastAPI):
         log.info("config_loaded_from_db")
     except Exception as e:
         log.warning("config_load_failed", error=str(e))
+
+    # Create default admin user if no admin exists
+    try:
+        from admin.auth import create_default_admin
+        admin = await create_default_admin()
+        if admin:
+            log.info("default_admin_created", email=admin.email)
+    except Exception as e:
+        log.warning("default_admin_creation_failed", error=str(e))
 
     yield
 
@@ -130,6 +141,17 @@ async def root():
         "health": "/health",
         "api": "/api",
     }
+
+
+# ============================================================================
+# Static Files & Templates
+# ============================================================================
+
+# Mount static files for admin panel
+app.mount("/admin/static", StaticFiles(directory="static"), name="admin-static")
+
+# Templates instance (for use in admin router)
+templates = Jinja2Templates(directory="templates")
 
 
 # ============================================================================
@@ -213,6 +235,10 @@ def mount_routers():
         prefix="/api/images",
         tags=["Image Generation"],
     )
+
+    # ── Admin WebUI ───────────────────────────────────────────────────────────
+    from admin import admin_router
+    app.include_router(admin_router)
 
     log.info("routers_mounted")
 

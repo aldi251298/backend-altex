@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Configure system settings and features</p>
+    </div>
+    
+    <form hx-post="/admin/settings" class="space-y-6">
+        <!-- RAG Settings -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    RAG Configuration
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Document retrieval and embedding settings</p>
+            </div>
+            
+            <div class="p-4 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Embedding Engine -->
+                    <div>
+                        <label for="embedding_engine" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Embedding Engine
+                        </label>
+                        <select 
+                            id="embedding_engine"
+                            name="embedding_engine"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                            <option value="openai" {% if config.embedding_engine == 'openai' %}selected{% endif %}>OpenAI</option>
+                            <option value="ollama" {% if config.embedding_engine == 'ollama' %}selected{% endif %}>Ollama</option>
+                            <option value="local" {% if config.embedding_engine == 'local' %}selected{% endif %}>Local</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Embedding Model -->
+                    <div>
+                        <label for="rag_embedding_model" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Embedding Model
+                        </label>
+                        <input 
+                            type="text" 
+                            id="rag_embedding_model"
+                            name="rag_embedding_model"
+                            value="{{ config.rag_embedding_model }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                            placeholder="text-embedding-3-small"
+                        >
+                    </div>
+                    
+                    <!-- Embedding Dimension -->
+                    <div>
+                        <label for="embedding_dimension" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Embedding Dimension
+                        </label>
+                        <input 
+                            type="number" 
+                            id="embedding_dimension"
+                            name="embedding_dimension"
+                            value="{{ config.embedding_dimension }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                    </div>
+                    
+                    <!-- Chunk Size -->
+                    <div>
+                        <label for="chunk_size" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Chunk Size
+                        </label>
+                        <input 
+                            type="number" 
+                            id="chunk_size"
+                            name="chunk_size"
+                            value="{{ config.chunk_size }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                    </div>
+                    
+                    <!-- Chunk Overlap -->
+                    <div>
+                        <label for="chunk_overlap" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Chunk Overlap
+                        </label>
+                        <input 
+                            type="number" 
+                            id="chunk_overlap"
+                            name="chunk_overlap"
+                            value="{{ config.chunk_overlap }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                    </div>
+                    
+                    <!-- RAG Top K -->
+                    <div>
+                        <label for="rag_top_k" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Top K Results
+                        </label>
+                        <input 
+                            type="number" 
+                            id="rag_top_k"
+                            name="rag_top_k"
+                            value="{{ config.rag_top_k }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                    </div>
+                    
+                    <!-- Relevance Threshold -->
+                    <div class="md:col-span-2">
+                        <label for="rag_relevance_threshold" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Relevance Threshold
+                        </label>
+                        <input 
+                            type="number" 
+                            step="0.1"
+                            min="0"
+                            max="1"
+                            id="rag_relevance_threshold"
+                            name="rag_relevance_threshold"
+                            value="{{ config.rag_relevance_threshold }}"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum similarity score for including results (0.0 - 1.0)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Web Search Settings -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Web Search
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure web search integration</p>
+            </div>
+            
+            <div class="p-4 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Enable Web Search -->
+                    <div class="flex items-center space-x-3">
+                        <input 
+                            type="checkbox" 
+                            id="enable_web_search"
+                            name="enable_web_search"
+                            value="true"
+                            {% if config.enable_web_search %}checked{% endif %}
+                            class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        >
+                        <label for="enable_web_search" class="text-sm text-gray-700 dark:text-gray-300">
+                            Enable Web Search
+                        </label>
+                    </div>
+                    
+                    <!-- Search Engine -->
+                    <div>
+                        <label for="web_search_engine" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Search Engine
+                        </label>
+                        <select 
+                            id="web_search_engine"
+                            name="web_search_engine"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                            <option value="tavily" {% if config.web_search_engine == 'tavily' %}selected{% endif %}>Tavily</option>
+                            <option value="brave" {% if config.web_search_engine == 'brave' %}selected{% endif %}>Brave</option>
+                            <option value="searxng" {% if config.web_search_engine == 'searxng' %}selected{% endif %}>SearXNG</option>
+                            <option value="duckduckgo" {% if config.web_search_engine == 'duckduckgo' %}selected{% endif %}>DuckDuckGo</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Search Result Count -->
+                    <div>
+                        <label for="search_result_count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Search Results Count
+                        </label>
+                        <input 
+                            type="number" 
+                            id="search_result_count"
+                            name="search_result_count"
+                            value="{{ config.search_result_count }}"
+                            min="1"
+                            max="10"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                        >
+                    </div>
+                </div>
+                
+                <!-- Web Search API Keys Info -->
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                    <p class="text-sm text-yellow-700 dark:text-yellow-400">
+                        <strong>Note:</strong> Search API keys must be configured via environment variables:
+                        <code class="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">TAVILY_API_KEY</code>, 
+                        <code class="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">BRAVE_SEARCH_API_KEY</code>,
+                        <code class="bg-yellow-100 dark:bg-yellow-900 px-1 rounded">SEARXNG_QUERY_URL</code>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Feature Flags -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                    </svg>
+                    Feature Flags
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enable or disable system features</p>
+            </div>
+            
+            <div class="p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Enable Image Generation -->
+                    <div class="flex items-center space-x-3">
+                        <input 
+                            type="checkbox" 
+                            id="enable_image_generation"
+                            name="enable_image_generation"
+                            value="true"
+                            {% if config.enable_image_generation %}checked{% endif %}
+                            class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        >
+                        <div>
+                            <label for="enable_image_generation" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Image Generation
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">DALL-E, Stable Diffusion, etc.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Enable Code Interpreter -->
+                    <div class="flex items-center space-x-3">
+                        <input 
+                            type="checkbox" 
+                            id="enable_code_interpreter"
+                            name="enable_code_interpreter"
+                            value="true"
+                            {% if config.enable_code_interpreter %}checked{% endif %}
+                            class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        >
+                        <div>
+                            <label for="enable_code_interpreter" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Code Interpreter
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Execute code in sandbox</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Enable Memory -->
+                    <div class="flex items-center space-x-3">
+                        <input 
+                            type="checkbox" 
+                            id="enable_memory"
+                            name="enable_memory"
+                            value="true"
+                            {% if config.enable_memory %}checked{% endif %}
+                            class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        >
+                        <div>
+                            <label for="enable_memory" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Memory
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Persistent conversation memory</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Enable Title Generation -->
+                    <div class="flex items-center space-x-3">
+                        <input 
+                            type="checkbox" 
+                            id="enable_title_generation"
+                            name="enable_title_generation"
+                            value="true"
+                            {% if config.enable_title_generation %}checked{% endif %}
+                            class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                        >
+                        <div>
+                            <label for="enable_title_generation" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Title Generation
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Auto-generate chat titles</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+            <button 
+                type="submit"
+                class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+            >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Save Settings
+            </button>
+        </div>
+    </form>
+    
+    <!-- Info Box -->
+    <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="flex">
+            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div class="text-sm">
+                <p class="font-medium text-blue-800 dark:text-blue-400">Configuration Priority</p>
+                <p class="text-blue-700 dark:text-blue-300 mt-1">
+                    Settings are applied in this order: Environment Variables → Database → Default Values.
+                    Environment variables have the highest priority and cannot be overridden from this panel.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

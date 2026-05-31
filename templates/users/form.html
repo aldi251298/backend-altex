@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit User{% else %}Add User{% endif %}{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <a href="/admin/users" class="hover:text-gray-700 dark:hover:text-gray-300">Users</a>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <span>{% if is_edit %}Edit{% else %}Add{% endif %}</span>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            {% if is_edit %}Edit User{% else %}Add New User{% endif %}
+        </h1>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+            {% if is_edit %}Update user account details{% else %}Create a new user account{% endif %}
+        </p>
+    </div>
+    
+    <!-- Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        {% if error %}
+        <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-red-700 dark:text-red-400">{{ error }}</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <form 
+            {% if is_edit %}
+            hx-post="/admin/users/{{ user.id }}"
+            {% else %}
+            hx-post="/admin/users"
+            {% endif %}
+            class="space-y-6"
+        >
+            <!-- Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Full Name <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="name"
+                    name="name" 
+                    required
+                    value="{% if user %}{{ user.name }}{% endif %}"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="John Doe"
+                >
+            </div>
+            
+            <!-- Email -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Email Address <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="email" 
+                    id="email"
+                    name="email" 
+                    required
+                    value="{% if user %}{{ user.email }}{% endif %}"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="user@example.com"
+                >
+            </div>
+            
+            <!-- Password -->
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Password {% if not is_edit %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                <input 
+                    type="password" 
+                    id="password"
+                    name="password"
+                    {% if not is_edit %}required{% endif %}
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                >
+                {% if is_edit %}
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Leave blank to keep current password</p>
+                {% else %}
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Minimum 8 characters</p>
+                {% endif %}
+            </div>
+            
+            <!-- Role -->
+            <div>
+                <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Role
+                </label>
+                <select 
+                    id="role"
+                    name="role"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                >
+                    <option value="user" {% if not user or user.role == 'user' %}selected{% endif %}>User</option>
+                    <option value="admin" {% if user and user.role == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Admins have full access to the admin panel
+                </p>
+            </div>
+            
+            <!-- Active Status -->
+            <div>
+                <label class="flex items-center space-x-3">
+                    <input 
+                        type="checkbox" 
+                        name="is_active"
+                        value="true"
+                        {% if not user or user.is_active %}checked{% endif %}
+                        class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    >
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Account is active</span>
+                </label>
+                <p class="mt-1 ml-7 text-xs text-gray-500 dark:text-gray-400">Inactive users cannot log in</p>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <a 
+                    href="/admin/users"
+                    class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                    Cancel
+                </a>
+                <button 
+                    type="submit"
+                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors"
+                >
+                    {% if is_edit %}Save Changes{% else %}Create User{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    {% if is_edit %}
+    <!-- Danger Zone -->
+    <div class="mt-6 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-6">
+        <h3 class="text-lg font-semibold text-red-800 dark:text-red-400 mb-2">Danger Zone</h3>
+        <p class="text-sm text-red-600 dark:text-red-400 mb-4">
+            Deleting this user will also delete all their chats and files.
+        </p>
+        {% if user.id != admin.user_id %}
+        <button 
+            hx-delete="/admin/users/{{ user.id }}"
+            hx-target="body"
+            hx-swap="none"
+            hx-confirm="Are you sure you want to delete user '{{ user.name }}'? This will also delete all their data."
+            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+        >
+            Delete User
+        </button>
+        {% else %}
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+            You cannot delete your own account.
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

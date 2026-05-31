@@ -502,7 +502,11 @@ async def _get_model_config(model_id: str) -> dict | None:
 def _detect_capabilities(model_id: str) -> dict:
     """Detect model capabilities from model name heuristics."""
     mid = model_id.lower()
-    vision = any(t in mid for t in ["vision", "vl", "gpt-4o", "claude-3", "gemini", "llava", "pixtral", "qwen-vl", "internvl"])
+    vision = any(t in mid for t in [
+        "vision", "vl", "gpt-4o", "claude-3", "gemini",
+        "llava", "pixtral", "qwen-vl", "internvl",
+        "qwen2", "qwen3"  # Modern Qwen models are often vision-capable
+    ])
     tools = any(t in mid for t in ["gpt-4", "gpt-3.5", "claude", "qwen", "mistral", "llama-3", "gemini", "deepseek"])
     # Thinking / extended reasoning — Qwen3, QwQ, DeepSeek-R1, o1/o3, Claude 3.5+
     thinking = any(t in mid for t in ["qwen3", "qwq", "deepseek-r1", "r1", "o1", "o3", "claude-3-5", "claude-3-7"])

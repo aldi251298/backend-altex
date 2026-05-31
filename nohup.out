@@ -1,0 +1,259 @@
+INFO:     Started server process [10832]
+INFO:     Waiting for application startup.
+2026-05-31 21:38:55,903 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-05-31 21:38:55,903 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:38:55,905 INFO sqlalchemy.engine.Engine select current_schema()
+2026-05-31 21:38:55,905 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:38:55,907 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-05-31 21:38:55,907 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-05-31 21:38:55,908 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:38:55,910 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:38:55,910 INFO sqlalchemy.engine.Engine [generated in 0.00013s] ('chats', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:38:55,913 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:38:55,913 INFO sqlalchemy.engine.Engine [cached since 0.003148s ago] ('providers', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:38:55,914 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:38:55,914 INFO sqlalchemy.engine.Engine [cached since 0.003923s ago] ('files', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:38:55,915 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:38:55,915 INFO sqlalchemy.engine.Engine [cached since 0.004653s ago] ('users', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:38:55,916 INFO sqlalchemy.engine.Engine SELECT pg_catalog.pg_class.relname 
+FROM pg_catalog.pg_class JOIN pg_catalog.pg_namespace ON pg_catalog.pg_namespace.oid = pg_catalog.pg_class.relnamespace 
+WHERE pg_catalog.pg_class.relname = $1::VARCHAR AND pg_catalog.pg_class.relkind = ANY (ARRAY[$2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR]) AND pg_catalog.pg_table_is_visible(pg_catalog.pg_class.oid) AND pg_catalog.pg_namespace.nspname != $7::VARCHAR
+2026-05-31 21:38:55,916 INFO sqlalchemy.engine.Engine [cached since 0.005556s ago] ('app_config', 'r', 'p', 'f', 'v', 'm', 'pg_catalog')
+2026-05-31 21:38:55,916 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:38:55,919 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:38:55,919 INFO sqlalchemy.engine.Engine SELECT config_path, value FROM app_config
+2026-05-31 21:38:55,919 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2026-05-31 21:38:55,921 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:38:55,922 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:38:55,925 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.name, users.hashed_password, users.role, users.is_active, users.settings, users.created_at, users.updated_at 
+FROM users 
+WHERE users.role = $1::VARCHAR
+2026-05-31 21:38:55,925 INFO sqlalchemy.engine.Engine [generated in 0.00010s] ('admin',)
+(trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-05-31 21:38:55,932 INFO sqlalchemy.engine.Engine ROLLBACK
+{"error": "password cannot be longer than 72 bytes, truncate manually if necessary (e.g. my_password[:72])", "event": "default_admin_creation_failed", "level": "warning", "logger": "main", "timestamp": "2026-05-31T21:38:55.933580Z"}
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:59976 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60614 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60628 - "GET /admin/ HTTP/1.1" 302 Found
+INFO:     127.0.0.1:45906 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45922 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45934 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46158 - "GET /admin/ HTTP/1.1" 302 Found
+INFO:     127.0.0.1:46168 - "GET /admin/login HTTP/1.1" 302 Found
+2026-05-31 21:41:33,972 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:41:33,973 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.name, users.hashed_password, users.role, users.is_active, users.settings, users.created_at, users.updated_at 
+FROM users 
+WHERE users.email = $1::VARCHAR
+2026-05-31 21:41:33,973 INFO sqlalchemy.engine.Engine [generated in 0.00011s] ('admin@altex.local',)
+(trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+2026-05-31 21:41:33,981 INFO sqlalchemy.engine.Engine ROLLBACK
+{"path": "/admin/login", "error": "password cannot be longer than 72 bytes, truncate manually if necessary (e.g. my_password[:72])", "exc_type": "ValueError", "event": "unhandled_exception", "level": "error", "logger": "main", "timestamp": "2026-05-31T21:41:33.982192Z"}
+INFO:     127.0.0.1:46180 - "POST /admin/login HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 399, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 70, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/prometheus_fastapi_instrumentator/middleware.py", line 174, in __call__
+    raise exc
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/prometheus_fastapi_instrumentator/middleware.py", line 172, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/routing.py", line 297, in handle
+    await self.app(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/routing.py", line 77, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/starlette/routing.py", line 72, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/fastapi/routing.py", line 278, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/admin/router.py", line 97, in login
+    user = await authenticate_admin(db, email, password)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/admin/auth.py", line 147, in authenticate_admin
+    if user.role != "admin":
+           ^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/admin/auth.py", line 38, in verify_password
+    # bcrypt has a 72 byte password limit
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/context.py", line 2347, in verify
+    return record.verify(secret, hash, **kwds)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 792, in verify
+    return consteq(self._calc_checksum(secret), chk)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 591, in _calc_checksum
+    self._stub_requires_backend()
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 2254, in _stub_requires_backend
+    cls.set_backend()
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 2156, in set_backend
+    return owner.set_backend(name, dryrun=dryrun)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 2163, in set_backend
+    return cls.set_backend(name, dryrun=dryrun)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 2188, in set_backend
+    cls._set_backend(name, dryrun)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 2311, in _set_backend
+    super(SubclassBackendMixin, cls)._set_backend(name, dryrun)
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 2224, in _set_backend
+    ok = loader(**kwds)
+         ^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 626, in _load_backend_mixin
+    return mixin_cls._finalize_backend_mixin(name, dryrun)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 421, in _finalize_backend_mixin
+    if detect_wrap_bug(IDENT_2A):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 380, in detect_wrap_bug
+    if verify(secret, bug_hash):
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/utils/handlers.py", line 792, in verify
+    return consteq(self._calc_checksum(secret), chk)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/dlami/nvme/Project/backend-altex/venv/lib/python3.12/site-packages/passlib/handlers/bcrypt.py", line 655, in _calc_checksum
+    hash = _bcrypt.hashpw(secret, config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: password cannot be longer than 72 bytes, truncate manually if necessary (e.g. my_password[:72])
+2026-05-31 21:42:26,989 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:42:26,990 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers ORDER BY providers.created_at DESC
+2026-05-31 21:42:26,990 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ()
+2026-05-31 21:42:26,993 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:52386 - "GET /api/providers HTTP/1.1" 200 OK
+2026-05-31 21:42:34,125 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:42:34,126 INFO sqlalchemy.engine.Engine INSERT INTO providers (id, name, base_url, api_key, auth_type, prefix, is_active, extra_config, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::VARCHAR, $6::VARCHAR, $7::BOOLEAN, $8::JSONB, $9::INTEGER, $10::INTEGER)
+2026-05-31 21:42:34,126 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ('e333287b-f54c-4c18-9341-4e121c7b4caa', 'vllm-local', 'http://172.31.11.139:8000/v1', 'not-needed', 'bearer', None, True, '{}', 1780263754, 1780263754)
+2026-05-31 21:42:34,128 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:42:34,131 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:42:34,132 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers 
+WHERE providers.id = $1::VARCHAR
+2026-05-31 21:42:34,132 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('e333287b-f54c-4c18-9341-4e121c7b4caa',)
+2026-05-31 21:42:34,134 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:45426 - "POST /api/providers HTTP/1.1" 201 Created
+2026-05-31 21:42:41,084 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:42:41,085 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers ORDER BY providers.created_at DESC
+2026-05-31 21:42:41,085 INFO sqlalchemy.engine.Engine [cached since 14.09s ago] ()
+2026-05-31 21:42:41,086 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:45430 - "GET /api/providers HTTP/1.1" 200 OK
+2026-05-31 21:42:42,053 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:42:42,054 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers 
+WHERE providers.id = $1::VARCHAR
+2026-05-31 21:42:42,054 INFO sqlalchemy.engine.Engine [generated in 0.00009s] ('e333287b-f54c-4c18-9341-4e121c7b4caa',)
+2026-05-31 21:42:42,055 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:38862 - "POST /api/providers/e333287b-f54c-4c18-9341-4e121c7b4caa/test HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48202 - "GET /v1/models HTTP/1.1" 404 Not Found
+2026-05-31 21:43:14,763 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:43:14,764 INFO sqlalchemy.engine.Engine SELECT providers.id, providers.name, providers.base_url, providers.api_key, providers.auth_type, providers.prefix, providers.is_active, providers.extra_config, providers.created_at, providers.updated_at 
+FROM providers 
+WHERE providers.is_active = true ORDER BY providers.name
+2026-05-31 21:43:14,764 INFO sqlalchemy.engine.Engine [generated in 0.00008s] ()
+2026-05-31 21:43:14,766 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:42780 - "GET /api/models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59466 - "POST /api/chat/completions HTTP/1.1" 200 OK
+2026-05-31 21:43:41,720 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:43:41,720 INFO sqlalchemy.engine.Engine 
+                SELECT id, name, base_url, api_key, auth_type, prefix, extra_config
+                FROM providers
+                WHERE is_active = true
+                  AND (prefix = $1 OR name ILIKE $2)
+                LIMIT 1
+            
+2026-05-31 21:43:41,720 INFO sqlalchemy.engine.Engine [generated in 0.00010s] ('Qwen/Qwen3', 'Qwen/Qwen3')
+2026-05-31 21:43:41,724 INFO sqlalchemy.engine.Engine SELECT id, name, base_url, api_key, auth_type, prefix, extra_config FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:43:41,724 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ()
+2026-05-31 21:43:41,725 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:43:41,727 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:43:41,727 INFO sqlalchemy.engine.Engine SELECT value FROM app_config WHERE config_path = $1
+2026-05-31 21:43:41,727 INFO sqlalchemy.engine.Engine [generated in 0.00007s] ('users.anonymous.tools',)
+2026-05-31 21:43:41,728 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-05-31 21:43:44,243 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:43:44,244 INFO sqlalchemy.engine.Engine SELECT chats.id, chats.user_id, chats.title, chats.chat, chats.is_shared, chats.share_id, chats.is_archived, chats.is_pinned, chats.folder_id, chats.created_at, chats.updated_at 
+FROM chats 
+WHERE chats.id = $1::VARCHAR
+2026-05-31 21:43:44,244 INFO sqlalchemy.engine.Engine [generated in 0.00010s] ('01d0b487-3fe7-493a-b383-04729b94f6b8',)
+2026-05-31 21:43:44,247 INFO sqlalchemy.engine.Engine INSERT INTO chats (id, user_id, title, chat, is_shared, share_id, is_archived, is_pinned, folder_id, created_at, updated_at) VALUES ($1::VARCHAR, $2::VARCHAR, $3::VARCHAR, $4::JSONB, $5::BOOLEAN, $6::VARCHAR, $7::BOOLEAN, $8::BOOLEAN, $9::VARCHAR, $10::INTEGER, $11::INTEGER)
+2026-05-31 21:43:44,247 INFO sqlalchemy.engine.Engine [generated in 0.00014s] ('01d0b487-3fe7-493a-b383-04729b94f6b8', 'anonymous', 'Chat Baru', '{"title": "Chat Baru", "history": {"messages": {}, "currentId": "9da1971f-c8ce-4b7d-89f5-2a237172fbfe"}, "models": ["Qwen/Qwen3.6-35B-A3B-FP8"], "tags": [], "files": []}', False, None, False, False, None, 1780263824, 1780263824)
+2026-05-31 21:43:44,249 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:43:44,251 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:43:44,251 INFO sqlalchemy.engine.Engine 
+                UPDATE chats
+                SET
+                    chat = jsonb_set(
+                        jsonb_set(
+                            chat,
+                            '{history,messages,9da1971f-c8ce-4b7d-89f5-2a237172fbfe}',
+                            '{"id": "9da1971f-c8ce-4b7d-89f5-2a237172fbfe", "role": "assistant", "content": "\n\ntest successful", "tool_calls": null, "done": true, "stopped": false, "timestamp": 1780263824}'::jsonb,
+                            true
+                        ),
+                        '{history,currentId}',
+                        '"9da1971f-c8ce-4b7d-89f5-2a237172fbfe"'::jsonb,
+                        true
+                    ),
+                    updated_at = $1
+                WHERE id = $2
+            
+2026-05-31 21:43:44,251 INFO sqlalchemy.engine.Engine [generated in 0.00007s] (1780263824, '01d0b487-3fe7-493a-b383-04729b94f6b8')
+2026-05-31 21:43:44,255 INFO sqlalchemy.engine.Engine COMMIT
+2026-05-31 21:43:44,257 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-05-31 21:43:44,257 INFO sqlalchemy.engine.Engine SELECT base_url, api_key FROM providers WHERE is_active = true LIMIT 1
+2026-05-31 21:43:44,257 INFO sqlalchemy.engine.Engine [generated in 0.00006s] ()
+2026-05-31 21:43:44,258 INFO sqlalchemy.engine.Engine ROLLBACK
+/opt/dlami/nvme/Project/backend-altex/retrieval/web/duckduckgo.py:24: RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+  ddgs = DDGS()
+DuckDuckGo search error: DDGS.text() got an unexpected keyword argument 'query'
+INFO:     127.0.0.1:59778 - "POST /api/retrieval/web/search HTTP/1.1" 200 OK
