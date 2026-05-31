@@ -72,8 +72,9 @@ templates.env.filters["size"] = format_size
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Render login page."""
-    # Check if already logged in
-    session = await get_current_admin(request)
+    # Check if already logged in - use get_current_admin_session to avoid redirect loop
+    from admin.auth import get_current_admin_session
+    session = await get_current_admin_session(request)
     if session:
         return RedirectResponse(url="/admin/dashboard", status_code=302)
 
