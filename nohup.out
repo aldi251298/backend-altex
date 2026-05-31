@@ -257,3 +257,4 @@ WHERE chats.id = $1::VARCHAR
   ddgs = DDGS()
 DuckDuckGo search error: DDGS.text() got an unexpected keyword argument 'query'
 INFO:     127.0.0.1:59778 - "POST /api/retrieval/web/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50026 - "GET /docs HTTP/1.1" 200 OK

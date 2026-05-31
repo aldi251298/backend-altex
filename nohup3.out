@@ -95,3 +95,4 @@ INFO:     127.0.0.1:38154 - "POST /api/chat/completions HTTP/1.1" 200 OK
 2026-05-31 21:59:37,267 INFO sqlalchemy.engine.Engine SELECT base_url, api_key FROM providers WHERE is_active = true LIMIT 1
 2026-05-31 21:59:37,267 INFO sqlalchemy.engine.Engine [generated in 0.00006s] ()
 2026-05-31 21:59:37,268 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:51198 - "GET /docs HTTP/1.1" 200 OK
